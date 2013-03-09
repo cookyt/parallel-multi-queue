@@ -1,7 +1,7 @@
 OBJ = obj/multi-queue.o
 INC = -Isrc/
 BIN = bin/test
-CXXFLAGS = -g
+CXXFLAGS = -g -pthread
 
 all: $(BIN)
 
