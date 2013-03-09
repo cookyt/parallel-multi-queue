@@ -1,45 +1,37 @@
 #include "pthread.h"
 
-// class Queue
-// {
-//   public:
-//     bool empty();
-//     int  size();
-//     int  front();
-//     int  back();
-//     void push(int);
-//     void pop();
-// };
-
+/**
+ * A two-lock concurrent queue based on the Michael and Scott paper:
+ * "Simple, Fast, and Practical Non-Blocking and Blocking Concurrent
+ * Queue Algorithms".
+ */
 class LockingQueue
 {
   private:
-    class Item
+    class Node
     {
       public:
         int data;
-        Item *next;
-        Item(int, Item *);
+        Node *next;
+        Node(int, Node *);
     };
-    Item *first;
-    Item *last;
-    int count;
-    pthread_mutex_t lock;
+    Node *head;
+    Node *tail;
+    pthread_mutex_t head_lock;
+    pthread_mutex_t tail_lock;
 
   public:
     LockingQueue();
-    bool empty();
-    int  size();
-    void push(int);
-    int  pop();
+    void enqueue(int);
+    int  dequeue();
 };
 
 class MultiQueue
 {
   private:
     LockingQueue *queues;
-    int count;
     int cur;
+    int _size;
   public:
     MultiQueue(int);
 };

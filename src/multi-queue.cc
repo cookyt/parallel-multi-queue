@@ -1,60 +1,47 @@
 #include "multi-queue.h"
 
-LockingQueue::Item::Item(int data_, Item *next_) :
+LockingQueue::Node::Node(int data_, Node *next_) :
     data(data_), next(next_)
 {}
 
-LockingQueue::LockingQueue() :
-    count(0), first(NULL), last(NULL)
+LockingQueue::LockingQueue()
 {
-    pthread_mutex_init(&lock, NULL);
+    pthread_mutex_init(&head_lock, NULL);
+    pthread_mutex_init(&tail_lock, NULL);
+    head = new Node(0, NULL);
+    tail = head;
 }
 
-bool LockingQueue::empty()
+void LockingQueue::enqueue(int data)
 {
-    return (count == 0);
+    Node *node = new Node(data, NULL);
+
+    pthread_mutex_lock(&tail_lock);
+    tail->next = node;
+    tail = node;
+    pthread_mutex_unlock(&tail_lock);
 }
 
-int LockingQueue::size()
+int LockingQueue::dequeue()
 {
-    return count;
-}
+    pthread_mutex_lock(&head_lock);
+    Node *node = head;
+    Node *new_head = head->next;
+    if (new_head == NULL)
+    {
+        pthread_mutex_unlock(&head_lock);
+        return 0;
+    }
+    int data = new_head->data;
+    head = new_head;
+    pthread_mutex_unlock(&head_lock);
 
-void LockingQueue::push(int data)
-{
-    pthread_mutex_lock(&lock);
-
-    Item *pushed = new Item(data, NULL);
-    if (last == NULL)
-        first = pushed;
-    else
-        last->next = pushed;
-    last = pushed;
-
-    count += 1;
-
-    pthread_mutex_unlock(&lock);
-}
-
-int LockingQueue::pop()
-{
-    pthread_mutex_lock(&lock);
-
-    Item *popped = first;
-    first = first->next;
-    if (first == NULL)
-        last = NULL;
-    int data = popped->data;
-    delete popped;
-    count -= 1;
-
-    pthread_mutex_unlock(&lock);
-
+    delete node;
     return data;
 }
 
-MultiQueue::MultiQueue(int count_) :
-    count(count_), cur(0)
+MultiQueue::MultiQueue(int size_) :
+    _size(size_), cur(0)
 {
-    queues = new LockingQueue[count];
+    queues = new LockingQueue[_size];
 }
