@@ -1,4 +1,4 @@
-#include "pthread.h"
+#include <boost/thread/mutex.hpp>
 
 /**
  * A two-lock concurrent queue based on the Michael and Scott paper:
@@ -17,11 +17,12 @@ class LockingQueue
     };
     Node *head;
     Node *tail;
-    pthread_mutex_t head_lock;
-    pthread_mutex_t tail_lock;
+    boost::mutex head_lock;
+    boost::mutex tail_lock;
 
   public:
     LockingQueue();
+    ~LockingQueue();
     void enqueue(int);
     int  dequeue();
 };
@@ -31,7 +32,7 @@ class MultiQueue
   private:
     LockingQueue *queues;
     int cur;
-    int _size;
+    int num_queues;
   public:
     MultiQueue(int);
 };

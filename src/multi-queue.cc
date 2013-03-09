@@ -6,42 +6,45 @@ LockingQueue::Node::Node(int data_, Node *next_) :
 
 LockingQueue::LockingQueue()
 {
-    pthread_mutex_init(&head_lock, NULL);
-    pthread_mutex_init(&tail_lock, NULL);
     head = new Node(0, NULL);
     tail = head;
+}
+
+LockingQueue::~LockingQueue()
+{
+    delete head;
 }
 
 void LockingQueue::enqueue(int data)
 {
     Node *node = new Node(data, NULL);
 
-    pthread_mutex_lock(&tail_lock);
+    tail_lock.lock();
     tail->next = node;
     tail = node;
-    pthread_mutex_unlock(&tail_lock);
+    tail_lock.unlock();
 }
 
 int LockingQueue::dequeue()
 {
-    pthread_mutex_lock(&head_lock);
+    head_lock.lock();
     Node *node = head;
     Node *new_head = head->next;
     if (new_head == NULL)
     {
-        pthread_mutex_unlock(&head_lock);
+        head_lock.unlock();
         return 0;
     }
     int data = new_head->data;
     head = new_head;
-    pthread_mutex_unlock(&head_lock);
+    head_lock.unlock();
 
     delete node;
     return data;
 }
 
-MultiQueue::MultiQueue(int size_) :
-    _size(size_), cur(0)
+MultiQueue::MultiQueue(int num_queues_) :
+    num_queues(num_queues_), cur(0)
 {
-    queues = new LockingQueue[_size];
+    queues = new LockingQueue[num_queues_];
 }
