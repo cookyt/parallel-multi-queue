@@ -3,8 +3,8 @@
 
 int main()
 {
-    ms::TwoLockQueue Q;
-    BasicTest<ms::TwoLockQueue> test(Q, 100);
+    cvl::ms::TwoLockQueue Q;
+    BasicTest<cvl::ms::TwoLockQueue> test(Q, 100);
     test.run();
     return 0;
 }

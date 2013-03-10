@@ -1,21 +1,28 @@
 #include "queue.h"
+#include "util.h"
 
-ms::TwoLockQueue::Node::Node(int data_, Node *next_) :
-    data(data_), next(next_)
-{}
+class cvl::ms::Node
+{
+  public:
+    int data;
+    Node *next;
+    Node(int data_, Node *next_) :
+        data(data_), next(next_)
+    {}
+};
 
-ms::TwoLockQueue::TwoLockQueue()
+cvl::ms::TwoLockQueue::TwoLockQueue()
 {
     head = new Node(0, NULL);
     tail = head;
 }
 
-ms::TwoLockQueue::~TwoLockQueue()
+cvl::ms::TwoLockQueue::~TwoLockQueue()
 {
     delete head;
 }
 
-void ms::TwoLockQueue::enqueue(int data)
+void cvl::ms::TwoLockQueue::enqueue(int data)
 {
     Node *node = new Node(data, NULL);
 
@@ -25,7 +32,7 @@ void ms::TwoLockQueue::enqueue(int data)
     tail_lock.unlock();
 }
 
-bool ms::TwoLockQueue::dequeue(int *ret)
+bool cvl::ms::TwoLockQueue::dequeue(int *ret)
 {
     head_lock.lock();
     Node *node = head;
@@ -41,6 +48,44 @@ bool ms::TwoLockQueue::dequeue(int *ret)
 
     delete node;
     return true;
+}
+
+cvl::ms::LockFreeQueue::LockFreeQueue()
+{
+    head = new Node(0, NULL);
+    tail = head;
+}
+
+cvl::ms::LockFreeQueue::~LockFreeQueue()
+{
+    delete head;
+}
+
+void cvl::ms::LockFreeQueue::enqueue(int data)
+{
+    // Node *node = new Node(data, NULL);
+    // for (;;)
+    // {
+    //     Node *mytail = tail;
+    //     Node *mynext = mytail->next;
+    //     if (mytail == tail)
+    //     {
+    //         if (mynext == NULL)
+    //         {
+    //             if (mynext == atomic::cas32((uint32_t *) &(tail->next), (uint32_t) node, (uint32_t) mynext))
+    //                 break
+    //         }
+    //         else
+    //         {
+    //             atomic::cas32((uint32_t *) &tail, (uint32_t) mynext, (uint32_t) mytail);
+    //         }
+    //     }
+    // }
+    // atomic::cas32((uint32_t *) &tail, (uint32_t) node, (uint32_t) mytail);
+}
+
+bool cvl::ms::LockFreeQueue::dequeue(int *ret)
+{
 }
 
 int nextPow2(int n)
@@ -67,26 +112,15 @@ cvl::MultiQueue::~MultiQueue()
         delete queues[i];
 }
 
-/**
- * This adds the given value to the word at the specified location and returns
- * the value prior to the addition. This is based on a builtin function for
- * GCC. Eventually, it should be replaced with a more portable implementation,
- * but for now, it's good for testing.
- */
-unsigned int cvl::MultiQueue::fetchAndAdd(unsigned int volatile *addr, unsigned int val)
-{
-    return __sync_fetch_and_add(addr, val);
-}
-
 void cvl::MultiQueue::enqueue(int data)
 {
-    unsigned int mycur = fetchAndAdd(&enqueue_cur, 1);
+    unsigned int mycur = atomic::fetchAndAdd(&enqueue_cur, 1);
     queues[mycur&mask]->enqueue(data);
 }
 
 bool cvl::MultiQueue::dequeue(int *ret)
 {
-    unsigned int mycur = fetchAndAdd(&dequeue_cur, 1);
+    unsigned int mycur = atomic::fetchAndAdd(&dequeue_cur, 1);
     bool status;
     do
     {
