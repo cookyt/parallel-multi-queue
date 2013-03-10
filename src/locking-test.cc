@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include "multi-queue.h"
 
-int const kNumThreads = 100;
+int const kNumThreads = 10000;
 
 class dequeuer
 {
@@ -30,7 +30,7 @@ class dequeuer
         {
             val = Q.dequeue();
         } while (val == 0);
-        printf("%d ", val);
+        // printf("%d ", val);
     }
 };
 

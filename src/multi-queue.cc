@@ -44,7 +44,31 @@ int LockingQueue::dequeue()
 }
 
 MultiQueue::MultiQueue(int num_queues_) :
-    num_queues(num_queues_), cur(0)
+    num_queues(num_queues_), enqueue_cur(0), dequeue_cur(0), queues(num_queues, NULL)
 {
-    queues = new LockingQueue[num_queues_];
+    for (int i=0; i<num_queues; ++i)
+        queues[i] = new LockingQueue();
+}
+
+MultiQueue::~MultiQueue()
+{
+    for (int i=0; i<queues.size(); ++i)
+        delete queues[i];
+}
+
+void MultiQueue::enqueue(int data)
+{
+    unsigned int mycur = __sync_fetch_and_add(&enqueue_cur, 1);
+    queues[mycur%num_queues]->enqueue(data);
+}
+
+int MultiQueue::dequeue()
+{
+    unsigned int mycur = __sync_fetch_and_add(&dequeue_cur, 1);
+    int ret;
+    do
+    {
+        ret = queues[mycur%num_queues]->dequeue();
+    } while (ret == 0);
+    return ret;
 }

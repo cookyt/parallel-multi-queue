@@ -1,3 +1,7 @@
+#ifndef MULTI_QUEUE_H
+#define MULTI_QUEUE_H
+
+#include <vector>
 #include <boost/thread/mutex.hpp>
 
 /**
@@ -30,11 +34,15 @@ class LockingQueue
 class MultiQueue
 {
   private:
-    LockingQueue *queues;
-    int cur;
     int num_queues;
+    volatile unsigned int enqueue_cur;
+    volatile unsigned int dequeue_cur;
+    std::vector<LockingQueue *> queues;
   public:
     MultiQueue(int);
+    ~MultiQueue();
     void enqueue(int);
     int  dequeue();
 };
+
+#endif
