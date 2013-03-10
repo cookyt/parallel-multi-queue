@@ -6,7 +6,7 @@ CXXFLAGS = -g
 all: $(BIN)
 
 bin/test: src/main.cc $(OBJ)
-	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt
 	
 obj/multi-queue.o: src/multi-queue.cc src/multi-queue.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@

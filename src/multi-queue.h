@@ -35,4 +35,6 @@ class MultiQueue
     int num_queues;
   public:
     MultiQueue(int);
+    void enqueue(int);
+    int  dequeue();
 };
