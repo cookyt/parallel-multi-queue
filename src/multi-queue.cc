@@ -35,12 +35,11 @@ bool LockingQueue::dequeue(int *ret)
         head_lock.unlock();
         return false;
     }
-    int data = new_head->data;
+    *ret = new_head->data;
     head = new_head;
     head_lock.unlock();
 
     delete node;
-    *ret = data;
     return true;
 }
 

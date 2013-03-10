@@ -1,7 +1,9 @@
 #ifndef BASIC_TEST_H
 #define BASIC_TEST_H
 
-#include <cstdio>
+# if DEBUG
+#  include <cstdio>
+# endif
 #include <boost/thread.hpp>
 
 // Defines a basic test where a number of producers and an
@@ -42,7 +44,9 @@ class BasicTest
             {
                 status = Q.dequeue(&val);
             } while (!status);
-            std::printf("%d ", val);
+# if DEBUG
+            std::fprintf(stderr, "%d ", val);
+# endif
         }
     };
 
@@ -85,6 +89,9 @@ class BasicTest
             threads.create_thread(d);
         }
         threads.join_all();
+# if DEBUG
+        std::fputs("\n", stderr);
+# endif
     }
 };
 
