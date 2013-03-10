@@ -67,21 +67,26 @@ cvl::MultiQueue::~MultiQueue()
         delete queues[i];
 }
 
+/**
+ * This adds the given value to the word at the specified location and returns
+ * the value prior to the addition. This is based on a builtin function for
+ * GCC. Eventually, it should be replaced with a more portable implementation,
+ * but for now, it's good for testing.
+ */
+unsigned int cvl::MultiQueue::fetchAndAdd(unsigned int volatile *addr, unsigned int val)
+{
+    return __sync_fetch_and_add(addr, val);
+}
+
 void cvl::MultiQueue::enqueue(int data)
 {
-    // This is a builtin function for GCC. Should replace it with a more
-    // portable method, but it's good for now for testing.
-    unsigned int mycur = __sync_fetch_and_add(&enqueue_cur, 1);
-
+    unsigned int mycur = fetchAndAdd(&enqueue_cur, 1);
     queues[mycur&mask]->enqueue(data);
 }
 
 bool cvl::MultiQueue::dequeue(int *ret)
 {
-    // This is a builtin function for GCC. Should replace it with a more
-    // portable method, but it's good for now for testing.
-    unsigned int mycur = __sync_fetch_and_add(&dequeue_cur, 1);
-
+    unsigned int mycur = fetchAndAdd(&dequeue_cur, 1);
     bool status;
     do
     {

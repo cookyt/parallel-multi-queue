@@ -48,9 +48,11 @@ namespace cvl
       private:
         int num_queues;
         int mask;
-        volatile unsigned int enqueue_cur;
-        volatile unsigned int dequeue_cur;
+        unsigned int volatile enqueue_cur;
+        unsigned int volatile dequeue_cur;
         std::vector<ms::TwoLockQueue *> queues;
+
+        unsigned int fetchAndAdd(unsigned int volatile *, unsigned int);
       public:
         MultiQueue(int);
         ~MultiQueue();
