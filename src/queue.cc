@@ -1,21 +1,21 @@
 #include "queue.h"
 
-LockingQueue::Node::Node(int data_, Node *next_) :
+ms::TwoLockQueue::Node::Node(int data_, Node *next_) :
     data(data_), next(next_)
 {}
 
-LockingQueue::LockingQueue()
+ms::TwoLockQueue::TwoLockQueue()
 {
     head = new Node(0, NULL);
     tail = head;
 }
 
-LockingQueue::~LockingQueue()
+ms::TwoLockQueue::~TwoLockQueue()
 {
     delete head;
 }
 
-void LockingQueue::enqueue(int data)
+void ms::TwoLockQueue::enqueue(int data)
 {
     Node *node = new Node(data, NULL);
 
@@ -25,7 +25,7 @@ void LockingQueue::enqueue(int data)
     tail_lock.unlock();
 }
 
-bool LockingQueue::dequeue(int *ret)
+bool ms::TwoLockQueue::dequeue(int *ret)
 {
     head_lock.lock();
     Node *node = head;
@@ -51,23 +51,23 @@ int nextPow2(int n)
     return cur;
 }
 
-MultiQueue::MultiQueue(int num_queues_) :
+cvl::MultiQueue::MultiQueue(int num_queues_) :
     enqueue_cur(0), dequeue_cur(0), queues()
 {
     num_queues = nextPow2(num_queues_);
     mask = num_queues-1;
     queues.reserve(num_queues);
     for (int i=0; i<num_queues; ++i)
-        queues[i] = new LockingQueue();
+        queues[i] = new ms::TwoLockQueue();
 }
 
-MultiQueue::~MultiQueue()
+cvl::MultiQueue::~MultiQueue()
 {
     for (int i=0; i<num_queues; ++i)
         delete queues[i];
 }
 
-void MultiQueue::enqueue(int data)
+void cvl::MultiQueue::enqueue(int data)
 {
     // This is a builtin function for GCC. Should replace it with a more
     // portable method, but it's good for now for testing.
@@ -76,7 +76,7 @@ void MultiQueue::enqueue(int data)
     queues[mycur&mask]->enqueue(data);
 }
 
-bool MultiQueue::dequeue(int *ret)
+bool cvl::MultiQueue::dequeue(int *ret)
 {
     // This is a builtin function for GCC. Should replace it with a more
     // portable method, but it's good for now for testing.

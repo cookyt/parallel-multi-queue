@@ -3,8 +3,8 @@
 
 int main()
 {
-    MultiQueue Q(100);
-    BasicTest<MultiQueue> test(Q, 100);
+    cvl::MultiQueue Q(100);
+    BasicTest<cvl::MultiQueue> test(Q, 100);
     test.run();
     return 0;
 }

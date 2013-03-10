@@ -5,45 +5,58 @@
 #include <boost/thread/mutex.hpp>
 
 /**
- * A two-lock concurrent queue based on the Michael and Scott paper:
- * "Simple, Fast, and Practical Non-Blocking and Blocking Concurrent
- * Queue Algorithms".
+ * Namespace stands for Michael Scott, writers of the paper "Simple, Fast, and
+ * Practical Non-Blocking and Blocking Concurrent Queue Algorithms" from which
+ * the algorithms for these classes come.
  */
-class LockingQueue
+namespace ms
 {
-  private:
-    class Node
+    /**
+     * A two-lock concurrent queue. Based on a linked list, and uses two locks
+     * for each the head and tail pointers.
+     */
+    class TwoLockQueue
     {
+      private:
+        class Node
+        {
+          public:
+            int data;
+            Node *next;
+            Node(int, Node *);
+        };
+        Node *head;
+        Node *tail;
+        boost::mutex head_lock;
+        boost::mutex tail_lock;
+
       public:
-        int data;
-        Node *next;
-        Node(int, Node *);
+        TwoLockQueue();
+        ~TwoLockQueue();
+        void enqueue(int);
+        bool dequeue(int *);
     };
-    Node *head;
-    Node *tail;
-    boost::mutex head_lock;
-    boost::mutex tail_lock;
+}
 
-  public:
-    LockingQueue();
-    ~LockingQueue();
-    void enqueue(int);
-    bool dequeue(int *);
-};
-
-class MultiQueue
+/**
+ * If I come up with anything original, it's in this namespace.
+ */
+namespace cvl
 {
-  private:
-    int num_queues;
-    int mask;
-    volatile unsigned int enqueue_cur;
-    volatile unsigned int dequeue_cur;
-    std::vector<LockingQueue *> queues;
-  public:
-    MultiQueue(int);
-    ~MultiQueue();
-    void enqueue(int);
-    bool dequeue(int *);
-};
+    class MultiQueue
+    {
+      private:
+        int num_queues;
+        int mask;
+        volatile unsigned int enqueue_cur;
+        volatile unsigned int dequeue_cur;
+        std::vector<ms::TwoLockQueue *> queues;
+      public:
+        MultiQueue(int);
+        ~MultiQueue();
+        void enqueue(int);
+        bool dequeue(int *);
+    };
+}
 
 #endif

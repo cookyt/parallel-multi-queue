@@ -3,8 +3,8 @@
 
 int main()
 {
-    LockingQueue Q;
-    BasicTest<LockingQueue> test(Q, 100);
+    ms::TwoLockQueue Q;
+    BasicTest<ms::TwoLockQueue> test(Q, 100);
     test.run();
     return 0;
 }
