@@ -28,13 +28,14 @@ class LockingQueue
     LockingQueue();
     ~LockingQueue();
     void enqueue(int);
-    int  dequeue();
+    bool dequeue(int *);
 };
 
 class MultiQueue
 {
   private:
     int num_queues;
+    int mask;
     volatile unsigned int enqueue_cur;
     volatile unsigned int dequeue_cur;
     std::vector<LockingQueue *> queues;
@@ -42,7 +43,7 @@ class MultiQueue
     MultiQueue(int);
     ~MultiQueue();
     void enqueue(int);
-    int  dequeue();
+    bool dequeue(int *);
 };
 
 #endif
