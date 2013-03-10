@@ -1,4 +1,4 @@
-#include "multi-queue.h"
+#include "queue.h"
 #include "basic-test.h"
 
 int main()

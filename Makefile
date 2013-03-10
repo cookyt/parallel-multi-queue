@@ -1,5 +1,5 @@
 DEBUG=0
-OBJ = obj/multi-queue.o
+OBJ = obj/queue.o
 INC = -Isrc/
 BIN = bin/locking-test bin/multi-test
 CXXFLAGS = -g -DDEBUG=$(DEBUG)
@@ -12,7 +12,7 @@ bin/multi-test: src/multi-test.cc src/basic-test.h $(OBJ)
 bin/locking-test: src/locking-test.cc src/basic-test.h $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt
 	
-obj/multi-queue.o: src/multi-queue.cc src/multi-queue.h
+obj/queue.o: src/queue.cc src/queue.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 clean-obj:

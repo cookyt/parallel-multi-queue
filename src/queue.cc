@@ -1,4 +1,4 @@
-#include "multi-queue.h"
+#include "queue.h"
 
 LockingQueue::Node::Node(int data_, Node *next_) :
     data(data_), next(next_)
