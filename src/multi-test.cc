@@ -3,8 +3,8 @@
 
 int main()
 {
-    LockingQueue Q;
-    BasicTest<LockingQueue> test(Q, 100);
+    MultiQueue Q(100);
+    BasicTest<MultiQueue> test(Q, 100);
     test.run();
     return 0;
 }
