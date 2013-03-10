@@ -1,11 +1,11 @@
 OBJ = obj/multi-queue.o
 INC = -Isrc/
-BIN = bin/test
+BIN = bin/locking-queue-test
 CXXFLAGS = -g
 
 all: $(BIN)
 
-bin/test: src/main.cc $(OBJ)
+bin/locking-queue-test: src/locking-queue-test.cc $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt
 	
 obj/multi-queue.o: src/multi-queue.cc src/multi-queue.h
