@@ -6,10 +6,10 @@ trials of a list of binaries and their averages. Each binary must take, as a
 cmdline arg, the number of threads it spawns. It also gets the short SHA-1 hash
 of the current git branch and prepends it to the log of each binary """
 
-log = open("log", "a")
+log = open("scripts/log/basic-test-log", "a")
 
 """ The number of times a given binary is tested """
-num_execs = 10
+num_execs = 100
 
 """ The number of threads to pass to each binary """
 num_threads = 10000
@@ -27,12 +27,20 @@ def test(exec_name):
     full_name = "%s %d"%(exec_name, num_threads)
     log.write("%s %s\n"%(build, full_name))
     avg = 0.0
+    bad_tests = 0
+    tests = list()
     for i in range(num_execs):
         cmd = os.popen3("time --format %e "+full_name)
         time = cmd[2].read()
-        log.write("\t%s"%time)
-        avg += float(time)
-    log.write("AVG %f\n\n"%(avg/float(num_execs)))
+        try:
+            avg += float(time)
+            tests.append("\t%s"%time)
+        except ValueError:
+            sys.stderr.write("Encountered a problem with a test on %s, recorded time is %s\n"%(full_name, time));
+            bad_tests += 1
+    log.write("AVG %f %d\n\n"%(avg/float(num_execs-bad_tests), num_execs-bad_tests))
+    for (test in tests):
+        log.write(test)
 
 for binary in bins:
     test(binary)
