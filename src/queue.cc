@@ -19,7 +19,15 @@ cvl::ms::TwoLockQueue::TwoLockQueue()
 
 cvl::ms::TwoLockQueue::~TwoLockQueue()
 {
-    delete head;
+    Node *del = head;
+    Node *cur = del->next;
+    while (cur != NULL)
+    {
+        delete del;
+        del = cur;
+        cur = cur->next;
+    }
+    delete del;
 }
 
 void cvl::ms::TwoLockQueue::enqueue(int data)
@@ -58,7 +66,15 @@ cvl::ms::LockFreeQueue::LockFreeQueue()
 
 cvl::ms::LockFreeQueue::~LockFreeQueue()
 {
-    delete head;
+    Node *del = head;
+    Node *cur = del->next;
+    while (cur != NULL)
+    {
+        delete del;
+        del = cur;
+        cur = cur->next;
+    }
+    delete del;
 }
 
 void cvl::ms::LockFreeQueue::enqueue(int data)

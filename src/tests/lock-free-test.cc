@@ -1,13 +1,17 @@
-#include <cstdio>
-#include <boost/thread.hpp>
+#include <cstdlib>
 #include "queue.h"
 #include "tests/basic-test.h"
 
-int main()
+int main(int argc, char **argv)
 {
-    cvl::ms::LockFreeQueue Q;
-    BasicTest<cvl::ms::LockFreeQueue> test(Q, 1000);
-    test.run();
+    int num_threads;
+    if (argc >= 2)
+        num_threads = std::atoi(argv[1]);
+    else
+        return 1;
 
+    cvl::ms::LockFreeQueue Q;
+    BasicTest<cvl::ms::LockFreeQueue> test(Q, num_threads);
+    test.run();
     return 0;
 }
