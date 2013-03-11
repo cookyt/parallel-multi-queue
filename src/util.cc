@@ -20,7 +20,7 @@ uint32_t cvl::atomic::fetchAndAdd(uint32_t volatile *addr, uint32_t val)
  * Uses a GCC-specific bultin. Should be implemented in a more portable
  * fashion.
  */
-uint32_t cvl::atomic::cas32(uint32_t *addr, uint32_t oldval, uint32_t newval)
+bool cvl::atomic::cas64(uint64_t *addr, uint64_t oldval, uint64_t newval)
 {
-    return __sync_val_compare_and_swap(addr, oldval, newval);
+    return __sync_bool_compare_and_swap(addr, oldval, newval);
 }

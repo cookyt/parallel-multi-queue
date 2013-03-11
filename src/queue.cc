@@ -63,29 +63,58 @@ cvl::ms::LockFreeQueue::~LockFreeQueue()
 
 void cvl::ms::LockFreeQueue::enqueue(int data)
 {
-    // Node *node = new Node(data, NULL);
-    // for (;;)
-    // {
-    //     Node *mytail = tail;
-    //     Node *mynext = mytail->next;
-    //     if (mytail == tail)
-    //     {
-    //         if (mynext == NULL)
-    //         {
-    //             if (mynext == atomic::cas32((uint32_t *) &(tail->next), (uint32_t) node, (uint32_t) mynext))
-    //                 break
-    //         }
-    //         else
-    //         {
-    //             atomic::cas32((uint32_t *) &tail, (uint32_t) mynext, (uint32_t) mytail);
-    //         }
-    //     }
-    // }
-    // atomic::cas32((uint32_t *) &tail, (uint32_t) node, (uint32_t) mytail);
+    Node *mytail, *mynext;
+    Node *node = new Node(data, NULL);
+    for (;;)
+    {
+        mytail = tail;
+        mynext = mytail->next;
+        if (mytail == tail)
+        {
+            if (mynext == NULL)
+            {
+                if (atomic::cas64((uint64_t *) &(tail->next), (uint64_t) mynext,
+                                  (uint64_t) node))
+                    break;
+            }
+            else
+            {
+                atomic::cas64((uint64_t *) &tail, (uint64_t) mytail,
+                              (uint64_t) mynext);
+            }
+        }
+    }
+    atomic::cas64((uint64_t *) &tail, (uint64_t) mytail, (uint64_t) node);
 }
 
 bool cvl::ms::LockFreeQueue::dequeue(int *ret)
 {
+    Node *myhead, *mytail, *mynext;
+    for (;;)
+    {
+        myhead = head;
+        mytail = tail;
+        mynext = myhead->next;
+        if (myhead == head)
+        {
+            if (myhead == mytail)
+            {
+                if (mynext == NULL)
+                    return false;
+                atomic::cas64((uint64_t *) &tail, (uint64_t) mytail, 
+                              (uint64_t) mynext);
+            }
+            else
+            {
+                *ret = mynext->data;
+                if (atomic::cas64((uint64_t *) &head, (uint64_t) myhead,
+                                  (uint64_t) mynext))
+                    break;
+            }
+        }
+    }
+    delete myhead;
+    return true;
 }
 
 int nextPow2(int n)
