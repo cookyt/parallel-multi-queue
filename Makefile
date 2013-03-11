@@ -24,7 +24,7 @@ obj/util.o: src/util.cc src/util.h
 clean-obj:
 	-$(RM) $(OBJ)
 clean-tags:
-	-$(RM) tags types_c.taghl
+	-$(RM) */tags */types*.taghl
 clean-bin:
 	-$(RM) $(BIN)
 clean-all: clean-obj clean-tags clean-bin
