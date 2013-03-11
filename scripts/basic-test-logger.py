@@ -10,10 +10,10 @@ of the current git branch and prepends it to the log of each binary """
 fname = "scripts/log/basic-test-log"
 
 """ The number of times a given binary is tested """
-num_execs = 1
+num_execs = 100
 
 """ The number of threads to pass to each binary """
-num_threads = 1
+num_threads = 10000
 
 """ The list of binaries to test """
 bins = ["bin/locking-test", "bin/multi-test", "bin/lock-free-test"]
@@ -81,6 +81,7 @@ class Logger:
                 bad_tests += 1
 
         self.log.write("AVG %f %d\n"%(avg/float(self.num_execs-bad_tests), self.num_execs-bad_tests))
+        tests.sort()
         for test in tests:
             self.log.write(test)
         self.log.write('\n')
