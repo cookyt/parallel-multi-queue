@@ -148,7 +148,7 @@ cvl::MultiQueue::MultiQueue(int num_queues_) :
     mask = num_queues-1;
     queues.reserve(num_queues);
     for (int i=0; i<num_queues; ++i)
-        queues[i] = new ms::TwoLockQueue();
+        queues.push_back(new ms::TwoLockQueue());
 }
 
 cvl::MultiQueue::~MultiQueue()
@@ -167,6 +167,13 @@ bool cvl::MultiQueue::dequeue(int *ret)
 {
     unsigned int mycur = atomic::fetchAndAdd(&dequeue_cur, 1);
     bool status;
+
+    // This is bad as a consumer could be stuck here indefinately if the
+    // producers decide not to enqueue anything, but I can't just return false
+    // because then I'll be skipping over one of the items in the queue.
+    //
+    // Maybe this skipping would be desireable in some cases. Will have to work
+    // out what that would mean for the overall functionality of the queue
     do
     {
         status = queues[mycur&mask]->dequeue(ret);
