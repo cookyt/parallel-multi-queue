@@ -10,7 +10,7 @@ of the current git branch and prepends it to the log of each binary """
 fname = "scripts/log/basic-test-log"
 
 """ The number of times a given binary is tested """
-num_execs = 100
+num_execs = 10
 
 """ The number of threads to pass to each binary """
 num_threads = 10000
@@ -53,7 +53,11 @@ class Logger:
         """Opens the log file for appending data. If the log is initially
         empty, it tries to get the name of the CPU and writes that as the first
         line in the log"""
-        if os.stat(fname).st_size == 0:
+        try:
+            logsize = os.stat(fname).st_size
+        except OSError:
+            logsize = 0
+        if logsize == 0:
             log = open(fname, "a")
             log.write(self.get_cpu_name())
         else:
