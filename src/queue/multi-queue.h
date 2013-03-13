@@ -42,19 +42,14 @@ namespace cvl
 
         bool dequeue(T &result)
         {
-            unsigned int mycur = atomic::fetchAndAdd(&dequeue_cur, 1);
-            bool status;
+            // Causes a problem if the integer overflows.
+            if (dequeue_cur >= enqueue_cur) // Make sure there are items left to dequeue
+                return false;
 
-            // This is bad as a consumer could be stuck here indefinately if the
-            // producers decide not to enqueue anything, but I can't just return false
-            // because then I'll be skipping over one of the items in the queue.
-            //
-            // Maybe this skipping would be desireable in some cases. Will have to work
-            // out what that would mean for the overall functionality of the queue
-            do
-            {
-                status = queues[mycur&mask]->dequeue(result);
-            } while (!status);
+            unsigned int mycur = atomic::fetchAndAdd(&dequeue_cur, 1); // Gain exclusivity to a queue
+
+            // I don't like having this loop here, but it makes sense to have it.
+            while (!queues[mycur&mask]->dequeue(result)) {}
             return true;
         }
     };
