@@ -137,14 +137,6 @@ bool cvl::ms::LockFreeQueue::dequeue(int &result)
     return true;
 }
 
-int nextPow2(int n)
-{
-    int cur = 1;
-    while (cur < n)
-        cur = cur << 1;
-    return cur;
-}
-
 cvl::MultiQueue::MultiQueue(int num_queues_) :
     enqueue_cur(0), dequeue_cur(0), queues()
 {
