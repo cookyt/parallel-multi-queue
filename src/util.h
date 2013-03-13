@@ -27,6 +27,7 @@ namespace cvl
         };
 
         Time now_cpu();
+        Time now_real();
     }
 
     int nextPow2(int n);

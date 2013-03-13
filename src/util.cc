@@ -81,10 +81,28 @@ const cvl::time::Time &cvl::time::Time::operator+(const Time &time)
     return Time(*this) += time;
 }
 
+/**
+ * Gets the current time starting from the beginning of the process. Note, this
+ * is user-space time, so concurrent threads will make it longer than the
+ * wall-clock time
+ */
 cvl::time::Time cvl::time::now_cpu()
 {
     struct timespec time;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time);
+    return Time(time.tv_sec, time.tv_nsec);
+}
+
+/**
+ * Gets the real (wall-clock) time. Time zero is some arbitrary start point in
+ * the past. The actual value returned from this isn't too useful, but the
+ * difference between times from this function can measure the time elapsed in
+ * a section of code.
+ */
+cvl::time::Time cvl::time::now_real()
+{
+    struct timespec time;
+    clock_gettime(CLOCK_MONOTONIC, &time);
     return Time(time.tv_sec, time.tv_nsec);
 }
 
