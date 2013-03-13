@@ -11,8 +11,8 @@
 // enqueue/dequeue one item each. The parameter is the type of
 // queue you want to test. It must provide the following
 // methods:
-//   void enqueue(int)
-//   bool dequeue(int *)
+//   void enqueue(const int &)
+//   bool dequeue(int &)
 template <typename Queue>
 class BasicTest
 {
@@ -42,7 +42,7 @@ class BasicTest
             bool status;
             do
             {
-                status = Q.dequeue(&val);
+                status = Q.dequeue(val);
             } while (!status);
 # if DEBUG
             std::fprintf(stderr, "%d ", val);

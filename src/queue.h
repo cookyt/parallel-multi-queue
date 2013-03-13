@@ -17,7 +17,7 @@ namespace cvl
      */
     namespace ms
     {
-        class Node;
+        struct Node;
 
         /**
          * A two-lock concurrent queue. Based on a linked list, and uses two locks
@@ -34,8 +34,8 @@ namespace cvl
           public:
             TwoLockQueue();
             ~TwoLockQueue();
-            void enqueue(int);
-            bool dequeue(int *);
+            void enqueue(const int &);
+            bool dequeue(int &);
         };
 
         class LockFreeQueue
@@ -47,8 +47,8 @@ namespace cvl
           public:
             LockFreeQueue();
             ~LockFreeQueue();
-            void enqueue(int);
-            bool dequeue(int *);
+            void enqueue(const int &);
+            bool dequeue(int &);
         };
     }
 
@@ -64,8 +64,8 @@ namespace cvl
       public:
         MultiQueue(int);
         ~MultiQueue();
-        void enqueue(int);
-        bool dequeue(int *);
+        void enqueue(const int &);
+        bool dequeue(int &);
     };
 }
 

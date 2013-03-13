@@ -1,19 +1,23 @@
 #include "queue.h"
 #include "util.h"
 
-class cvl::ms::Node
+struct cvl::ms::Node
 {
   public:
-    int data;
+    int *data;
     Node *next;
-    Node(int data_, Node *next_) :
+    Node(int *data_, Node *next_) :
         data(data_), next(next_)
     {}
+    ~Node()
+    {
+        delete data;
+    }
 };
 
 cvl::ms::TwoLockQueue::TwoLockQueue()
 {
-    head = new Node(0, NULL);
+    head = new Node(NULL, NULL);
     tail = head;
 }
 
@@ -30,9 +34,9 @@ cvl::ms::TwoLockQueue::~TwoLockQueue()
     delete del;
 }
 
-void cvl::ms::TwoLockQueue::enqueue(int data)
+void cvl::ms::TwoLockQueue::enqueue(const int &data)
 {
-    Node *node = new Node(data, NULL);
+    Node *node = new Node(new int(data), NULL);
 
     tail_lock.lock();
     tail->next = node;
@@ -40,7 +44,7 @@ void cvl::ms::TwoLockQueue::enqueue(int data)
     tail_lock.unlock();
 }
 
-bool cvl::ms::TwoLockQueue::dequeue(int *ret)
+bool cvl::ms::TwoLockQueue::dequeue(int &ret)
 {
     head_lock.lock();
     Node *node = head;
@@ -50,7 +54,7 @@ bool cvl::ms::TwoLockQueue::dequeue(int *ret)
         head_lock.unlock();
         return false;
     }
-    *ret = new_head->data;
+    ret  = *(new_head->data);
     head = new_head;
     head_lock.unlock();
 
@@ -60,7 +64,7 @@ bool cvl::ms::TwoLockQueue::dequeue(int *ret)
 
 cvl::ms::LockFreeQueue::LockFreeQueue()
 {
-    head = new Node(0, NULL);
+    head = new Node(NULL, NULL);
     tail = head;
 }
 
@@ -77,10 +81,10 @@ cvl::ms::LockFreeQueue::~LockFreeQueue()
     delete del;
 }
 
-void cvl::ms::LockFreeQueue::enqueue(int data)
+void cvl::ms::LockFreeQueue::enqueue(const int &data)
 {
     Node *mytail, *mynext;
-    Node *node = new Node(data, NULL);
+    Node *node = new Node(new int(data), NULL);
     for (;;)
     {
         mytail = tail;
@@ -103,7 +107,7 @@ void cvl::ms::LockFreeQueue::enqueue(int data)
     atomic::cas64((uint64_t *) &tail, (uint64_t) mytail, (uint64_t) node);
 }
 
-bool cvl::ms::LockFreeQueue::dequeue(int *ret)
+bool cvl::ms::LockFreeQueue::dequeue(int &result)
 {
     Node *myhead, *mytail, *mynext;
     for (;;)
@@ -122,7 +126,7 @@ bool cvl::ms::LockFreeQueue::dequeue(int *ret)
             }
             else
             {
-                *ret = mynext->data;
+                result = *(mynext->data);
                 if (atomic::cas64((uint64_t *) &head, (uint64_t) myhead,
                                   (uint64_t) mynext))
                     break;
@@ -157,13 +161,13 @@ cvl::MultiQueue::~MultiQueue()
         delete queues[i];
 }
 
-void cvl::MultiQueue::enqueue(int data)
+void cvl::MultiQueue::enqueue(const int &data)
 {
     unsigned int mycur = atomic::fetchAndAdd(&enqueue_cur, 1);
     queues[mycur&mask]->enqueue(data);
 }
 
-bool cvl::MultiQueue::dequeue(int *ret)
+bool cvl::MultiQueue::dequeue(int &ret)
 {
     unsigned int mycur = atomic::fetchAndAdd(&dequeue_cur, 1);
     bool status;
