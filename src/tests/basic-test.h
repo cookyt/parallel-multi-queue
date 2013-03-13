@@ -1,10 +1,9 @@
 #ifndef BASIC_TEST_H
 #define BASIC_TEST_H
 
-# if DEBUG
-#  include <cstdio>
-# endif
+#include <unistd.h>
 #include <boost/thread.hpp>
+#include "util.h"
 
 // Defines a basic test where a number of producers and an
 // equal number of consumers are spawned and let loose to
@@ -13,40 +12,42 @@
 // methods:
 //   void enqueue(const int &)
 //   bool dequeue(int &)
-template <typename Queue>
+template <typename Queue, typename T>
 class BasicTest
 {
   private:
     Queue &Q;
-    int num_threads;
+    int num_producers;
+    int num_consumers;
+
     class Consumer
     {
       private:
         Queue &Q;
-        int id;
         boost::barrier &bar;
 
       public:
-        Consumer(Queue &Q_, int id_, boost::barrier &bar_) :
-            Q(Q_), id(id_), bar(bar_)
+        Consumer(Queue &Q_, boost::barrier &bar_) :
+            Q(Q_), bar(bar_)
         {}
 
         Consumer(Consumer &de) :
-            Q(de.Q), id(de.id), bar(de.bar)
+            Q(de.Q), bar(de.bar)
         {}
 
         void operator()()
         {
             bar.wait();
-            int val;
+            T val;
             bool status;
-            do
+            for (;;)
             {
-                status = Q.dequeue(val);
-            } while (!status);
-# if DEBUG
-            std::fprintf(stderr, "%d ", val);
-# endif
+                if (Q.dequeue(val))
+                {
+                    // TODO log consumed item
+                }
+                boost::this_thread::interruption_point();
+            }
         }
     };
 
@@ -54,44 +55,62 @@ class BasicTest
     {
       private:
         Queue &Q;
-        int id;
+        T item;
         boost::barrier &bar;
 
       public:
-        Producer(Queue &Q_, int id_, boost::barrier &bar_) :
-            Q(Q_), id(id_), bar(bar_)
+        Producer(Queue &Q_, const T &item_, boost::barrier &bar_) :
+            Q(Q_), item(item_), bar(bar_)
         {}
 
         Producer(Producer &eq) :
-            Q(eq.Q), id(eq.id), bar(eq.bar)
+            Q(eq.Q), item(eq.item), bar(eq.bar)
         {}
 
         void operator()()
         {
             bar.wait();
-            Q.enqueue(id);
+            for (;;)
+            {
+                Q.enqueue(item);
+                boost::this_thread::interruption_point();
+            }
         }
     };
   public:
-    BasicTest(Queue &Q_, int num_threads_) :
-        Q(Q_), num_threads(num_threads_)
+    BasicTest(Queue &Q_, int num_producers_, int num_consumers_) :
+        Q(Q_), num_producers(num_producers_), num_consumers(num_consumers_)
     {}
 
-    void run()
+    /**
+     * Runs the simulation of producers and consumers for the given amount of
+     * time.
+     * @param secs The simulation will run for at least this number of seconds
+     * @param item Each producer will get a copy of this item to "produce" in the queue
+     */
+    void run(int secs, const T &item)
     {
-        boost::barrier bar(2*num_threads);
+        boost::barrier bar(num_producers+num_consumers);
         boost::thread_group threads;
-        for (int i=1; i<=num_threads; i++)
+        for (int i=1; i<=num_producers; i++)
         {
-            Producer e(Q, i, bar);
-            Consumer d(Q, num_threads+i, bar);
+            Producer e(Q, item, bar);
             threads.create_thread(e);
+        }
+        for (int i=1; i<=num_consumers-1; i++)
+        {
+            Consumer d(Q, bar);
             threads.create_thread(d);
         }
-        threads.join_all();
-# if DEBUG
-        std::fputs("\n", stderr);
-# endif
+
+        using cvl::time::Time;
+
+        Time before = cvl::time::now_cpu();
+        Consumer d(Q, bar);
+        threads.create_thread(d);
+        sleep(secs);
+        threads.interrupt_all();
+        Time elapsed = cvl::time::now_cpu() - before;
     }
 };
 
