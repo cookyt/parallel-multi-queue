@@ -15,6 +15,15 @@ Questions
 + Dr. Jha mentioned that UCF had a large multi-processor computer. If I ask, I
   might be able to get some time on that.
 
+### What programs can I use to generate graphs with 3 independent vars
++ Octave and Matlab have tools for graphing
+
+
+TODO
+----
+### Formally prove that my approach is linearizable (maybe not true)
+### Construct a table of queue throughput vs number of producers vs number of consumers
+
 
 Namespaces
 ----------
