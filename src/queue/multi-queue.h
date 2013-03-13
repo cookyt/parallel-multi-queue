@@ -18,7 +18,8 @@ namespace cvl
         std::vector<ms::TwoLockQueue<T> *> queues;
 
       public:
-        MultiQueue(int num_queues_)
+        MultiQueue(int num_queues_) : 
+            enqueue_cur(0), dequeue_cur(0)
         {
             num_queues = nextPow2(num_queues_);
             mask = num_queues-1;
