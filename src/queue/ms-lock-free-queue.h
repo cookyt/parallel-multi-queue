@@ -45,10 +45,10 @@ namespace cvl
                 delete del;
             }
 
-            void enqueue(const int &item)
+            void enqueue(const T &item)
             {
                 Node *mytail, *mynext;
-                Node *node = new Node(new int(item), NULL);
+                Node *node = new Node(new T(item), NULL);
                 for (;;)
                 {
                     mytail = tail;
@@ -71,7 +71,7 @@ namespace cvl
                 atomic::cas64((uint64_t *) &tail, (uint64_t) mytail, (uint64_t) node);
             }
 
-            bool dequeue(int &result)
+            bool dequeue(T &result)
             {
                 Node *myhead, *mytail, *mynext;
                 for (;;)
