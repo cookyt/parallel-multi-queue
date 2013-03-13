@@ -2,7 +2,8 @@
 #include "queue.h"
 #include "tests/basic-test.h"
 
-extern template class BasicTest<cvl::ms::LockFreeQueue>;
+extern template class cvl::ms::LockFreeQueue<int>;
+extern template class BasicTest<cvl::ms::LockFreeQueue<int> >;
 
 int main(int argc, char **argv)
 {
@@ -12,8 +13,8 @@ int main(int argc, char **argv)
     else
         return 1;
 
-    cvl::ms::LockFreeQueue Q;
-    BasicTest<cvl::ms::LockFreeQueue> test(Q, num_threads);
+    cvl::ms::LockFreeQueue<int> Q;
+    BasicTest<cvl::ms::LockFreeQueue<int> > test(Q, num_threads);
     test.run();
     return 0;
 }

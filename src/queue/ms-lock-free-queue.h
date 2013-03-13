@@ -1,6 +1,7 @@
 #ifndef MS_LOCK_FREE_QUEUE_H
 #define MS_LOCK_FREE_QUEUE_H
 
+#include <cstddef> // used to define NULL
 #include "util.h"
 
 namespace cvl

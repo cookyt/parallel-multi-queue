@@ -1,6 +1,7 @@
 #ifndef MS_TWO_LOCK_QUEUE_H
 #define MS_TWO_LOCK_QUEUE_H
 
+#include <cstddef> // used to define NULL
 #include <boost/thread/mutex.hpp>
 
 namespace cvl

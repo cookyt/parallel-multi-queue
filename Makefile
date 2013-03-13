@@ -15,7 +15,7 @@ bin/locking-test: src/tests/locking-test.cc src/tests/basic-test.h $(OBJ)
 bin/lock-free-test: src/tests/lock-free-test.cc src/tests/basic-test.h $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt
 	
-obj/queue.o: src/queue.cc src/queue.h
+obj/queue.o: src/templ/queue.cc src/queue/ms-lock-free-queue.h src/queue/ms-two-lock-queue.h src/queue/multi-queue.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 obj/util.o: src/util.cc src/util.h
