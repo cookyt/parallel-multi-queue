@@ -25,6 +25,9 @@ bool cvl::atomic::cas64(uint64_t *addr, uint64_t oldval, uint64_t newval)
     return __sync_bool_compare_and_swap(addr, oldval, newval);
 }
 
+/**
+ * Calculates the next power of two larger than the input.
+ */
 int cvl::nextPow2(int n)
 {
     int cur = 1;
