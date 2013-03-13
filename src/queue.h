@@ -1,5 +1,5 @@
-#ifndef MULTI_QUEUE_H
-#define MULTI_QUEUE_H
+#ifndef QUEUE_H
+#define QUEUE_H
 
 #include <vector>
 #include <boost/thread/mutex.hpp>
