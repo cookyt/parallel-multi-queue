@@ -2,6 +2,8 @@
 #include "queue.h"
 #include "tests/basic-test.h"
 
+extern template class BasicTest<cvl::ms::TwoLockQueue>;
+
 int main(int argc, char **argv)
 {
     int num_threads;
