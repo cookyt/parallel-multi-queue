@@ -9,13 +9,13 @@ CXXFLAGS = -g -DDEBUG=$(DEBUG)
 all: $(BIN)
 
 bin/multi-test: src/tests/multi-test.cc obj/tests-multi.o obj/queue-multi.o obj/util.o
-	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt -lrt
 
 bin/locking-test: src/tests/locking-test.cc obj/tests-two-lock.o obj/queue-two-lock.o obj/util.o
-	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt -lrt
 
 bin/lock-free-test: src/tests/lock-free-test.cc obj/tests-lock-free.o obj/queue-lock-free.o obj/util.o
-	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt -lrt
 
 obj/util.o: src/util.cc src/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
