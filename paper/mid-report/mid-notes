@@ -1,3 +1,21 @@
+Sections:
+Abstract
+    Take from Proposal
+Introduction
+    Problem Description
+    History
+Algorithms
+    Concepts
+    Pseudocode
+Future Work
+    Proof of Correctness
+    Algorithmic Extensions
+    Implementation Issues
+    Testing
+        Methods
+        Hardware
+
+
 def pc-count - counters to keep track of position of producers and consumers in
                multiqueue.
 
@@ -13,6 +31,21 @@ deadlock-prone
     ex: might be able to turn this into k-linearizable queue by using some kind
     of optimistic give up and retry method; however k-linearizability might be
     difficult to prove
+
+Elimination Backoff
+    Often, a producer and consumer come to an empty queue at the same time. It
+    might be possible to circumvent the queue alltogether and have the producer
+    give the item directly to the consumer. This has the added benefit of
+    removing consumer/producer exclusivity on a given queue, lessening
+    contention. This sort of contention strategy in employed as an elimination
+    backoff array for stacks (see ASM article), and gives good performance
+    gains. The main issue is that the backoff array does not lend itself to
+    queues as well as it does to stacks. This is because a stack under high
+    contention might get several elimination backoff array hits on every
+    push/pop, but the scheme only works for the multi queue if the intermediate
+    queue is empty. It is worth persuing as a means of squeezeing performance
+    out, but the overhead of using an elimination backoff scheme might be
+    offset by the rarity of the situation under which its usage is applicable.
 
 Number of queues in multi-queue
     Initially meant to be max of number of producers and consumers in program,
@@ -39,6 +72,15 @@ prove linearizability
 
 code-level performance tweaks
     false-sharing
+
+    Pass by value vs. pass by reference operations
+        Current code keeps copies in queue and allocates heap memory to store
+        pointers in nodes which. Concurrent memory allocation is tricky, but
+        the stock memory allocation scheme will likely be the source of
+        performace bottlenecks.
+
+        Continue using stock allocator, look into alternatives (see memory
+        allocation in concurrent vector paper).
         
 Using others' code
     Need to adapt Micheal-Scott code to current test rig

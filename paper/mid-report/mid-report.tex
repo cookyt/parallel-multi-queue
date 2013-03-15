@@ -1,0 +1,189 @@
+\documentclass[12pt]{report}
+\usepackage[ruled,vlined]{algorithm2e} %Uses version 3.9
+\usepackage{url}
+
+\begin{document}
+\title{Reducing Contention in Concurrent Queues: Midterm Report}
+\author{Carlos Valera \\
+    University of Central Florida \\
+    \texttt{cvaleraleon@knights.ucf.edu}}
+\date{March 15, 2013}
+\maketitle
+\begin{abstract}
+I introduce the concepts of operation for a new contention manangement system
+for concurrent queues called a MultiQueue. The MultiQueue wraps concurrent
+queue algorithms from previous authors, and reduces contention on accesses to
+these queues from multiple threads by distributing data across multiple
+structure instances. I plan to test the throughput MultiQueue under various
+load conditions and compare the results against previous implementations of
+queues without the MultiQueue.  As this is a preliminary report, work on this
+structure is ongoing, and the functionality of the MultiQueue has not yet been
+finalized.
+\end{abstract}
+\section{Introduction}
+%Problem Description
+TODO
+The concurrent queue is a well-studied and practical structure in concurrent
+programming. It is a FIFO structure where 
+
+and many implementations have been attempted. Notable are the implementations
+by Michael and Scott\cite{michael1996} who provide a non-locking concurrent
+queue, and the implementation by Scherer et al.\cite{scherer2009} which is the
+basis for the \texttt{SyncronousQueue} class in \emph{Java 6}.
+
+%History
+\section{Algorithms}
+%Concepts
+The concepts surrounding the MultiQueue are simple enough. The structure keeps
+an internal list of concurrent queues and two counters that keep track how many
+enqueue and dequeue operations have been made on the MultiQueue. In essence,
+the internal list is treated like a circular array based queue of queues, and
+the two counters essentially point to the head and tail of this queue. The
+intent is to isolate the larger enqueue and dequeue operations of more complex
+queue algorithms so that, on average, each queue has only one producer and one
+consumer operating on it.
+
+%Pseudocode
+\begin{scriptsize}
+\begin{algorithm}[H]
+\SetKwIF{blk}{}{}{}{}{}{}{} % Hacky way to get vline to work properly with blocks
+\SetKwFunction{Init}{void initialize}
+\SetKwFunction{Enq}{void enqueue}
+\SetKwFunction{Deq}{bool dequeue}
+\SetKwFunction{ienq}{internalEnqueue}
+\SetKwFunction{ideq}{internalDequeue}
+\SetKwFunction{iinit}{internalInitialize}
+\SetKwFunction{FAA}{fetchAndAdd}
+\SetKwFunction{nexttwo}{nextPowerOf2}
+\SetKwFunction{ladd}{listAdd}
+\SetKw{Continue}{continue}
+\SetKw{Struct}{structure}
+\SetKwFor{For}{for}{}{}
+\SetKwIF{If}{ElseIf}{Else}{if}{}{elif}{else}{}
+\SetKwFor{While}{while}{}{}
+\SetKwInOut{Input}{input}
+\SetKwInOut{Output}{output}
+\SetNoFillComment
+
+\caption{pseudocode defining the operations which can be done on a MultiQueue
+         as well as the structure of a MultiQueue.}
+
+\Struct InternalQueue
+\blk{}{
+    \tcp{The internal structure of this is not important as long as supports
+    the concurrent enqueue and dequeue operations}
+}
+
+\Struct MultiQueue
+\blk{}{
+    int num\_queues\;
+    int mask \tcp*[r]{Bitmask used to wrap counters}
+    uint producer\_counter \tcp*[r]{Tracks the next "empty" spot for a producer}
+    uint consumer\_counter \tcp*[r]{Tracks the next "empty" spot for a consumer}
+    list queues \tcp*[r]{A list of internal concurrent queues}
+}
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+
+\Input{The multi queue to initialize and the number of queues to initialize it
+       for}
+\Init{MultiQueue Q, int num\_queues}
+\blk{}{
+    Q.producer\_counter = Q.consumer\_counter = 0\;
+    Q.num\_queues = \nexttwo{num\_queues}\;
+    Q.mask = Q.num\_queues$-$1\;
+    Q.queues = list()\;
+    \For{i=0 \KwTo Q.num\_queues}{
+        IQ = InternalQueue\;
+        \iinit{IQ}\;
+        \ladd{Q.queues, IQ}
+    }
+}
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+
+\Input{The multi queue to enqueue into and the item to enqueue}
+\Enq{MultiQueue  Q, data\_t\_ptr item}
+\blk{}{
+    next\_empty = \FAA{Q.producer\_counter, 1}\;
+    next\_queue = Q.queues[next\_empty]\;
+    \ienq{next\_queue, item}\;
+}
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+
+\Input{The multi queue to attempt to dequeue from and an address to a location
+       to store the dequeued item}
+\Output{If the queue is empty, false is returned, otherwise true is returned
+        and the value of the dequeued item is copied into the address pointed to by
+        \it{result}}
+\Deq{MultiQueue Q, data\_t\_ptr result}
+\blk{}{
+    \If(\tcp*[f]{quit if queue is empty}){Q.consumer\_ptr$<$Q.producer\_counter}{
+        \Return{false}\;
+    }
+    next\_empty = \FAA{Q.consumer\_counter, 1}\;
+    next\_queue = Q.queues[next\_empty $\&$ Q.mask]\;
+    \BlankLine
+    \tcp{Keep trying to dequeue an item until one is found. This loop is needed
+         to prevent race conditions between a consumer enqueing and a producer
+         dequeueing at the same time}
+    \While{$\neg$\ideq{next\_queue, result}}{
+        \Continue
+    }
+    \Return{true}\;
+    
+}
+\end{algorithm}
+\end{scriptsize}
+
+\section{Future Work}
+\subsection{Proof of Correctness}
+In this document I do not have a proof of correctness of a MultiQueue or even a
+proof for it having any desireable attributes. In it's current state, I suspect
+that the Multiqueue is a linearizable structure because it relies on
+linearizable implementations of concurrent queues to function correctly.
+Although I am still working on properly defining the functionality of the
+MultiQueue, there are a few issues I on the horizon which might render a
+correct (and provable correct) structure difficult.
+
+The first problem with this structure is the issues that it faces when one of
+the threads is significantly faster than the others and, as a result, causes
+the consumer or producer counter to wrap around to the point where another
+thread is doing work. By having two threads operating on the same end of the
+queue at once. The use of the MultiQueue essentially degenerates to the use of
+the underlying concurrent queue. Theoretically, then, the MultiQueue does not
+provide any correctness properties that are more powerful than the underlying
+concurrent queue, and, thus, is strictly limited by it.
+
+Another problem that the structure has which might compromise its correctness
+is its use of counters for positioning producers and consumers. More
+specifically, to check that a MultiQueue is non-empty, the current
+implementation compares that the consumer counter is strictly less than the
+producer counter; however, that raises the question of what should happen when
+the producer counter (which uses the native integer size of the machine)
+overflows and resets to zero. Practically, this will not likely happen for most
+use cases as that would require that $2^{32}$ items be enqueued which is far
+beyond most uses of concurrent queues, but there are some cases of long-running
+applications or applications which which might reach that limit, and without a
+guarantee of correctness for such a case, the MultiQueue is not a viable
+option.
+
+
+\subsection{Algorithmic Extensions}
+\subsection{Implementation Issues}
+\subsection{Testing}
+\subsubsection{Methods}
+\subsubsection{Hardware}
+\bibliographystyle{plain}
+\bibliography{mid-report}
+\end{document}
