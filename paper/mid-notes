@@ -1,0 +1,116 @@
+def pc-count - counters to keep track of position of producers and consumers in
+               multiqueue.
+
+Test different internal queue structures
+    Guess: simple two-lock will perform very well due to smaller work needing
+    to be done (unlike lock-free approaches which require a lot of work to be
+    done before publishing results, and this work might not need to be done
+    most of the time because of lower contention on individual queues.
+
+Spinning on dequeue when queue assigned is messy and makes code more
+deadlock-prone
+    Maybe by loosening the correctness requirements, this spin can be avoided;
+    ex: might be able to turn this into k-linearizable queue by using some kind
+    of optimistic give up and retry method; however k-linearizability might be
+    difficult to prove
+
+Number of queues in multi-queue
+    Initially meant to be max of number of producers and consumers in program,
+    but that usage limits usability on programs with indeterminate number of
+    threads (most non-trivial programs)
+
+    Does the number-of-threads assumption allow faster enqueue/dequeue
+    alogrithm to be implemented?
+        Initially, idea was to use lock-less 1-producer 1-consumer queues as
+        internal queues which would obviously be fast, but might not be
+        linearizable (what happens if one thread is much faster than all others
+        and wraps around?)
+
+prove linearizability
+    pc-count wrap around vector might make
+ 
+    pc-count uses monotonically increasing int counters to provide tag info
+    which avoids ABA problem at the multi-queue level, but not the
+    individual-queue level
+
+    pc-count wrap around int is problem theoretically. Practically, Wrapping 4
+    billion vals is unlikely, and use of 64 bit uint makes wrapping take longer
+    than any program will feasibly run
+
+code-level performance tweaks
+    false-sharing
+        
+Using others' code
+    Need to adapt Micheal-Scott code to current test rig
+        Should I test against all provided algorithms, or just a few of the
+        best and a baseline one-lock
+    Sutter code is available and relatively easy to adapt
+
+testing
+    throughput
+        Main goal is to test relative speed and scalability
+
+        should number of producers/consumers be varied?
+            Sutter's work implies # of consumers/producers is more significant
+            than just # of threads
+
+            Optimal tests would use N^2 trials where N=num of processors.
+                This would generate 3D graph of performance to number of consumers
+                to producers.
+
+                Takes a loooooong time to run all tests
+
+                might be able to reduce number of tests to focus around the
+                number_producers+number_consumers=number_processors line.
+                    Would not reveal whole story if High contention causes
+                    unscalable behavior (which is the main thing I want to
+                    test). This approach is used by micheal et all
+
+        How should it be measured (rigging)
+            Results tend to vary by surprising margins when
+            num_threads>num_processors
+
+            Current scheme uses a thread-local counter and a timer which runs
+            all threads for specified amount of time. Values are tallied after
+            threads are terminated and counter is stopped.
+                Avoids contention issues contaminating results when using
+                shared counter
+
+                Allows easy way to vary time each test takes
+
+                requires longer tests for accurate results
+                    Might need to scale test time lenght to number of threads
+                    to produce consistant results
+
+            Micheal et all used fixed number of enqueues/dequeues per thread
+            and timed simulation
+                Fixed workload might provide more consistant results across the
+                board.
+
+                Test time length is not changeable or even predictable which
+                might be prohibitive given limited access to CPU time
+
+                We expect times for threads>procs to be erratic and times for
+                threads<=procs (more important) to be reasonably predictable
+                with short test times using both methods anyway.
+
+    Getting access to a machine
+        Multiprocessor machine with many cores (12 seems common in
+        papers). The extra granularity of thread allocation due to number of
+        processors allows more comprehensive tests for scalability.
+            UCF has (and can allow access) to large comupters like this (some
+            clusters and some multiprocessors)
+                Difficult for an undergrad to get access. Requisition process
+                likely slow (due to paperwork).
+
+                If I am not allowed direct access (e.g. must write scripts and
+                give instructions to someone else), I cannot be there to
+                respond to sudden unlikely events, so much of the work is front
+                heavy in designing good bullet-proof scripts.
+
+                Amount of time I will have on machine will likely be very
+                limited which, in turn, limits the number and thoroughness of
+                the tests I can run.
+
+        I have access to several machines with <=4 cores.
+            Will work for testing raw performance under tight constraints.
