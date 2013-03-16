@@ -12,7 +12,7 @@
 \date{March 15, 2013}
 \maketitle
 \begin{abstract}
-I introduce the concepts of operation for a new contention manangement system
+I introduce the concepts of operation for a new contention management system
 for concurrent queues called a MultiQueue. The MultiQueue wraps concurrent
 queue algorithms from previous authors, and reduces contention on accesses to
 these queues from multiple threads by distributing data across multiple
@@ -26,7 +26,7 @@ finalized.
 %Problem Description
 The concurrent queue is a well-studied and practical structure in concurrent
 programming. One issue with the concurrent queue is that because queues are an
-inherently sequential datastructure, many implementations of concurrent queues
+inherently sequential data-structure, many implementations of concurrent queues
 suffer from high contention when under load. I will describe a method for
 managing contention between queues to gain performance. I call the structure
 which does this a MultiQueue. The method builds on previous implementations of
@@ -142,8 +142,8 @@ consumer operating on it.
     next\_queue = Q.queues[next\_empty $\&$ Q.mask]\;
     \BlankLine
     \tcp{Keep trying to dequeue an item until one is found. This loop is needed
-         to prevent race conditions between a consumer enqueing and a producer
-         dequeueing at the same time}
+         to prevent race conditions between a consumer dequeueing and a producer
+         enqueueing at the same time}
     \While{$\neg$\ideq{next\_queue, result}}{
         \Continue
     }
@@ -156,8 +156,8 @@ consumer operating on it.
 \section{Work to be Done}
 \subsection{Proof of Correctness}
 In this document I do not have a proof of correctness of a MultiQueue or even a
-proof for it having any desireable attributes. In it's current state, I suspect
-that the Multiqueue is a linearizable structure because it relies on
+proof for it having any desirable attributes. In it's current state, I suspect
+that the MultiQueue is a linearizable structure because it relies on
 linearizable implementations of concurrent queues to function correctly.
 Although I am still working on properly defining the functionality of the
 MultiQueue, there are a few issues I see on the horizon which might render a
@@ -195,7 +195,7 @@ be''. Initially, the concept was to have the size be the max of the number of
 producer and consumer threads. This was in an attempt to have at most two
 threads -- one consumer, one producer -- using a given queue at once, but, as I
 have shown, it is possible for a single thread fast thread to wrap around the
-queue and lead to multiple producers or consumers accesing a single queue. As
+queue and lead to multiple producers or consumers accessing a single queue. As
 such, the question arises as to how to choose the correct number of queues for
 the MultiQueue. One problem that I could take into consideration is that many
 programs do not know -- in advance -- how many threads will be used, so having
@@ -207,7 +207,7 @@ In the other direction, there is the question of whether any guarantees can be
 made about behavior if the size is kept static. Further, would it be possible
 to guarantee that at most one producer and one consumer is accessing a given
 internal queue at a time. If it were possible, then the internal queue could be
-implemented using lockless single producer single consumer queues, which could
+implemented using lock-less single producer single consumer queues, which could
 lead to performance gains. In essence, this direction would involve moving the
 complexity out of the internal queues and into the MultiQueue super structure.
 
@@ -228,11 +228,11 @@ how I proceed, the answer to this question will be very useful to me.
 
 In the trials I have done with the MultiQueue, I have found it is not uncommon
 for a producer and a consumer to arrive an empty queue at the same time.
-Elimination Backoff techniques have been used in concurrent stack
-implementations to negate two opposite operatons from different threads by
+Elimination Back-off techniques have been used in concurrent stack
+implementations to negate two opposite operations from different threads by
 having the two threads communicate directly rather than through the stack.
 Initially, I thought that because the domains of consumers and producers in
-queues lie on seperate ends of the structure, that the two would meet too
+queues lie on separate ends of the structure, that the two would meet too
 rarely for such techniques such to be useful, but my tests are suggesting it
 may be worth implementing some sort of delegate to handle the case when a
 consumer and producer meet in an empty queue. Such a delegate would require
@@ -244,7 +244,7 @@ gains.
 One of the main issue with implementing any sort of concurrent data structure
 is that of how to store the data. If storing by value (the approach used by,
 for example, C++ STL container classes), then there is a serious performance
-penelty associated with copying large structures around for many operations. In
+penalty associated with copying large structures around for many operations. In
 contrast, a more typical approach is to store data on the heap and pass
 container objects by reference. This has the advantage that even large data
 structure can be ``atomically'' changed with a CAS, but has the severe
@@ -252,7 +252,7 @@ limitation of needing to go through a memory allocator which often introduces
 performance bottlenecks.
 
 From the tests I have seen performed on concurrent queues, the use of
-pass-by-reference greatly inproves performance far above the use of
+pass-by-reference greatly improves performance far above the use of
 pass-by-value.\cite{suttertest}  As such, I implement all structures using pass
 by reference, knowing that to get a more realistic view of how structures will
 perform, I will need to implement an allocator which allows for a greater
@@ -262,7 +262,7 @@ time.\cite{herlihy2005}
 
 \subsection{Testing}
 There are two primary attributes I intend to test: relative speed and
-scalibility. For this, I am designing a flexible set of tests which test the
+scalability. For this, I am designing a flexible set of tests which test the
 throughput of a queue -- the number of items that have been dequeued per
 second.
 
@@ -276,7 +276,7 @@ there are two primary variables which must be controlled.
 
 Obviously, an ideal test would test a range of thread counts up to (and even
 past) the number of processors on the system. This is to measure how adding
-threads affects performance, and whether any noticable patterns indicative of
+threads affects performance, and whether any noticeable patterns indicative of
 common concurrency issues arise. If I only looked at this metric, I would have
 to run $N$ tests for each algorithm, where $N$ is the number of available cores
 on the testing machine. The issue with this metric, however, is that it does
@@ -287,22 +287,22 @@ number of consumers and producers even when the number of threads is fixed.
 
 The main challenge adding this second metric presents is that to get a full
 picture, $N^2$ tests are required per algorithm. Further, for the sake of
-granularity, it is desireable to test on a machine with many cores; however,
+granularity, it is desirable to test on a machine with many cores; however,
 being an undergraduate student, it is difficult to procure access to one.
 Running tests that may take several hours would make this task even more
 difficult.
 
 One approach to reduce the number of tests is to only test on the line where
 $numberProducers+numberConsumers=N$ for the relative size tests, and again
-where $numberProducers=numberConsumers$ for $threadCount=1\to N$. This ammounts
+where $numberProducers=numberConsumers$ for $threadCount=1\to N$. This amounts
 to a total of $2N$ tests per algorithm. Although this would not give me a
-complete picture, it is a reasonable compramise if I am unable to procure much
+complete picture, it is a reasonable compromise if I am unable to procure much
 time on a large multi-core machine.
 
 On the other hand, measuring relative speed against other algorithms is much
 easier. As long as the testing configurations between algorithms stay the same,
 I will not need special hardware. I will likely use the second set of tests
-from the scalibility tests for my final results, but the fact that I am able to
+from the scalability tests for my final results, but the fact that I am able to
 use my own machines to test relative speed gives me a good amount of leeway.
 
 It is worth noting that Michael and Scott have posted their source code on
