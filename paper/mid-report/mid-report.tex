@@ -2,6 +2,8 @@
 \usepackage[ruled,vlined]{algorithm2e} %Uses version 3.9
 \usepackage{url}
 
+\newcommand{\TODO}[1]{}
+
 \begin{document}
 \title{Reducing Contention in Concurrent Queues: Midterm Report}
 \author{Carlos Valera \\
@@ -22,14 +24,19 @@ finalized.
 \end{abstract}
 \section{Introduction}
 %Problem Description
-TODO
 The concurrent queue is a well-studied and practical structure in concurrent
-programming. It is a FIFO structure where 
+programming. One issue with the concurrent queue is that because queues are an
+inherently sequential datastructure, many implementations of concurrent queues
+suffer from high contention when under load. I will describe a method for
+managing contention between queues to gain performance. I call the structure
+which does this a MultiQueue. The method builds on previous implementations of
+concurrent queues, and tries to improve concurrency by distributing the work
+presented to the queue amongst multiple instances of concurrent queues.
 
-and many implementations have been attempted. Notable are the implementations
-by Michael and Scott\cite{michael1996} who provide a non-locking concurrent
-queue, and the implementation by Scherer et al.\cite{scherer2009} which is the
-basis for the \texttt{SyncronousQueue} class in \emph{Java 6}.
+There still remains a good deal of work to be done on the MultiQueue as of the
+time of this writing. A good deal of this paper will go over possible avenues
+of exploration to improve the MultiQueue, and on issues which might be faced in
+development.
 
 %History
 \section{Algorithms}
@@ -65,7 +72,7 @@ consumer operating on it.
 \SetKwInOut{Output}{output}
 \SetNoFillComment
 
-\caption{pseudocode defining the operations which can be done on a MultiQueue
+\caption{Pseudocode defining the operations which can be done on a MultiQueue
          as well as the structure of a MultiQueue.}
 
 \Struct InternalQueue
@@ -146,15 +153,15 @@ consumer operating on it.
 \end{algorithm}
 \end{scriptsize}
 
-\section{Future Work}
+\section{Work to be Done}
 \subsection{Proof of Correctness}
 In this document I do not have a proof of correctness of a MultiQueue or even a
 proof for it having any desireable attributes. In it's current state, I suspect
 that the Multiqueue is a linearizable structure because it relies on
 linearizable implementations of concurrent queues to function correctly.
 Although I am still working on properly defining the functionality of the
-MultiQueue, there are a few issues I on the horizon which might render a
-correct (and provable correct) structure difficult.
+MultiQueue, there are a few issues I see on the horizon which might render a
+correct (and provably correct) structure difficult.
 
 The first problem with this structure is the issues that it faces when one of
 the threads is significantly faster than the others and, as a result, causes
@@ -180,10 +187,128 @@ option.
 
 
 \subsection{Algorithmic Extensions}
+There are several avenues I want to explore corresponding to the algorithms
+used by the MultiQueue.
+
+The first question I want to answer is: ``how large should the list of queues
+be''. Initially, the concept was to have the size be the max of the number of
+producer and consumer threads. This was in an attempt to have at most two
+threads -- one consumer, one producer -- using a given queue at once, but, as I
+have shown, it is possible for a single thread fast thread to wrap around the
+queue and lead to multiple producers or consumers accesing a single queue. As
+such, the question arises as to how to choose the correct number of queues for
+the MultiQueue. One problem that I could take into consideration is that many
+programs do not know -- in advance -- how many threads will be used, so having
+a static size limit to the queues would prohibit use of the MultiQueue in these
+cases. As such, it may be worth investigating whether it is possible to
+dynamically resize the MultiQueue based on load.
+
+In the other direction, there is the question of whether any guarantees can be
+made about behavior if the size is kept static. Further, would it be possible
+to guarantee that at most one producer and one consumer is accessing a given
+internal queue at a time. If it were possible, then the internal queue could be
+implemented using lockless single producer single consumer queues, which could
+lead to performance gains. In essence, this direction would involve moving the
+complexity out of the internal queues and into the MultiQueue super structure.
+
+Another direction which I will need to explore at least to some degree is the
+question of what is the optimal concurrent queue algorithm to use in
+conjunction with the MultiQueue. At the moment, my implementation uses a simple
+2-lock structure provided by Micheal and Scott\cite{michael1996}. This is
+because I my hypothesis is that the MultiQueue will work best when the
+underlying concurrent queue algorithm is simple overall, and the given two lock
+algorithm has a very small footprint. In contrast, lock free structures usually
+have a good deal of overhead associated with them, the price of which is only
+worth paying if there is a good deal of contention on between threads for the
+same structure. If the MultiQueue is successful in negating the need for that
+overhead by significantly reducing contention for a given queue, then using a
+lock free internal queue would provide little benefit. Still, it is important
+to gather empirical data to decide what internal queue to use. Regardless of
+how I proceed, the answer to this question will be very useful to me.
+
+In the trials I have done with the MultiQueue, I have found it is not uncommon
+for a producer and a consumer to arrive an empty queue at the same time.
+Elimination Backoff techniques have been used in concurrent stack
+implementations to negate two opposite operatons from different threads by
+having the two threads communicate directly rather than through the stack.
+Initially, I thought that because the domains of consumers and producers in
+queues lie on seperate ends of the structure, that the two would meet too
+rarely for such techniques such to be useful, but my tests are suggesting it
+may be worth implementing some sort of delegate to handle the case when a
+consumer and producer meet in an empty queue. Such a delegate would require
+some overhead for every operation on the queue, but could bypass the internal
+queue structure altogether in some cases, possibly leading to performance
+gains.
+
 \subsection{Implementation Issues}
+One of the main issue with implementing any sort of concurrent data structure
+is that of how to store the data. If storing by value (the approach used by,
+for example, C++ STL container classes), then there is a serious performance
+penelty associated with copying large structures around for many operations. In
+contrast, a more typical approach is to store data on the heap and pass
+container objects by reference. This has the advantage that even large data
+structure can be ``atomically'' changed with a CAS, but has the severe
+limitation of needing to go through a memory allocator which often introduces
+performance bottlenecks.
+
+From the tests I have seen performed on concurrent queues, the use of
+pass-by-reference greatly inproves performance far above the use of
+pass-by-value.\cite{suttertest}  As such, I implement all structures using pass
+by reference, knowing that to get a more realistic view of how structures will
+perform, I will need to implement an allocator which allows for a greater
+degree of concurrency than the stock one. Herlihy et al. provide a non-blocking
+memory management system which I plan to implement given the
+time.\cite{herlihy2005}
+
 \subsection{Testing}
-\subsubsection{Methods}
-\subsubsection{Hardware}
+There are two primary attributes I intend to test: relative speed and
+scalibility. For this, I am designing a flexible set of tests which test the
+throughput of a queue -- the number of items that have been dequeued per
+second.
+
+The problem of measuring scalability is the more difficult of the two. The
+metric I have decided to use is throughput: the number of items that have gone
+through the queue in a given time period. The basic idea is to run some number
+of threads as producers and some number as consumers, have them constantly try
+to perform an operation on the queue, and then count the number of operations
+that were completed in a given amount of time. With this scheme,
+there are two primary variables which must be controlled.
+
+Obviously, an ideal test would test a range of thread counts up to (and even
+past) the number of processors on the system. This is to measure how adding
+threads affects performance, and whether any noticable patterns indicative of
+common concurrency issues arise. If I only looked at this metric, I would have
+to run $N$ tests for each algorithm, where $N$ is the number of available cores
+on the testing machine. The issue with this metric, however, is that it does
+not consider the effects of varying the relative number of consumers and
+producers. As the tests on concurrent queues done by Sutter\cite{suttertest} show,
+the points where throughput is maximized can vary widely depending on the
+number of consumers and producers even when the number of threads is fixed.
+
+The main challenge adding this second metric presents is that to get a full
+picture, $N^2$ tests are required per algorithm. Further, for the sake of
+granularity, it is desireable to test on a machine with many cores; however,
+being an undergraduate student, it is difficult to procure access to one.
+Running tests that may take several hours would make this task even more
+difficult.
+
+One approach to reduce the number of tests is to only test on the line where
+$numberProducers+numberConsumers=N$ for the relative size tests, and again
+where $numberProducers=numberConsumers$ for $threadCount=1\to N$. This ammounts
+to a total of $2N$ tests per algorithm. Although this would not give me a
+complete picture, it is a reasonable compramise if I am unable to procure much
+time on a large multi-core machine.
+
+On the other hand, measuring relative speed against other algorithms is much
+easier. As long as the testing configurations between algorithms stay the same,
+I will not need special hardware. I will likely use the second set of tests
+from the scalibility tests for my final results, but the fact that I am able to
+use my own machines to test relative speed gives me a good amount of leeway.
+
+It is worth noting that Michael and Scott have posted their source code on
+\url{ftp://ftp.cs.rochester.edu/pub/packages/sched\_conscious\_synch/concurrent\_queues},
+so I will be able to adapt this code to use my test rig when testing.
+
 \bibliographystyle{plain}
 \bibliography{mid-report}
 \end{document}
