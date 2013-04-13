@@ -7,6 +7,12 @@
 
 namespace cvl
 {
+    /** 
+     * Experimental MultiQueue. It uses the a two-lock queue developed by
+     * Micheal and Scott internally. Currently, operations create a full copy
+     * of the item via the copy constructor and pass around pointers to the
+     * object in the queues themselves.
+     */
     template<typename T>
     class MultiQueue
     {

@@ -83,10 +83,16 @@ class BasicTest
         boost::barrier &bar;
 
       public:
+        /**
+         * Creates a producer with a copy of the passed item, and a reference to the queue and barrier.
+         */
         Producer(Queue &Q_, const T &item_, boost::barrier &bar_) :
             Q(Q_), item(item_), bar(bar_)
         {}
 
+        /**
+         * Copy constructor. Needed for boost threads.
+         */
         Producer(Producer &eq) :
             Q(eq.Q), item(eq.item), bar(eq.bar)
         {}

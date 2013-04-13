@@ -9,9 +9,11 @@ namespace cvl
     namespace ms
     {
         /**
-         * A two-lock concurrent queue. It's based on a linked list and uses two locks
-         * for each of the head and tail pointers. The template parameter
-         * must provide the copy constructor and the assignment operator.
+         * A two-lock concurrent queue. It's based on a linked list and uses
+         * two locks for each of the head and tail pointers. The template
+         * parameter must provide the copy constructor and the assignment
+         * operator. This version allocates memory for new nodes, and new
+         * copies of the passed item.
          */
         template<typename T>
         class TwoLockQueue
