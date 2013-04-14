@@ -2,30 +2,42 @@
 #include <cstdlib>
 #include "queue.h"
 #include "tests/basic-test.h"
+#include "tests/parse-cmd-line.h"
 
 extern template class cvl::ms::TwoLockQueue<int>;
 extern template class BasicTest<cvl::ms::TwoLockQueue<int>, int>;
 
 int main(int argc, char **argv)
 {
-    int num_producers, num_consumers, time_to_run;
-    if (argc >= 4)
+    using namespace std;
+    using namespace cvl::ms;
+    using cvl::time::Time;
+
+    CmdLineOpts opts;
+    if (parseCmdLineOpts(argc, argv, opts) != 0)
+        return 1;
+    if (opts.verbose)
+        opts.describe();
+
+    pair<Time,int> throughput;
+    if (opts.use_large_test)
     {
-        num_producers = std::atoi(argv[1]);
-        num_consumers = std::atoi(argv[2]);
-        time_to_run   = std::atoi(argv[3]);
+        fprintf(stderr, "Large items not implemented yet\n");
+        return 1;
     }
     else
     {
-        return 1;
+        TwoLockQueue<int> Q;
+        BasicTest<TwoLockQueue<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+        throughput = test.run(0);
     }
 
-    cvl::ms::TwoLockQueue<int> Q;
-    BasicTest<cvl::ms::TwoLockQueue<int>, int> test(Q, num_producers, num_consumers, time_to_run);
-    std::pair<cvl::time::Time, int> throughput = test.run(0);
-
-    double time = (double) throughput.first.secs + (double)throughput.first.nsecs/(double)1e9;
-    std::printf("throughput: %lf items/sec\n", throughput.second/time);
+    int items = throughput.second;
+    double time = ((double) throughput.first.secs) + ((double) throughput.first.nsecs)/1e9;
+    if (opts.verbose)
+        printf("throughput: %lf items/sec\n", items/time);
+    else
+        printf("%lf\n", items/time);
 
     return 0;
 }

@@ -35,9 +35,12 @@ cvl::time::Time::Time(uint64_t secs_, uint64_t nsecs_) :
     secs(secs_), nsecs(nsecs_)
 {}
 
-
 cvl::time::Time::Time(const Time &time) :
     secs(time.secs), nsecs(time.nsecs)
+{}
+
+cvl::time::Time::Time() :
+    secs(0), nsecs(0)
 {}
 
 cvl::time::Time &cvl::time::Time::operator-=(const Time &time)

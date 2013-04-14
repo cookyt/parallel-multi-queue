@@ -16,6 +16,7 @@ namespace cvl
         {
             Time(uint64_t secs_, uint64_t nsecs_);
             Time(const Time &);
+            Time();
             Time &operator-=(const Time &);
             Time &operator+=(const Time &);
             Time &operator=(const Time &);

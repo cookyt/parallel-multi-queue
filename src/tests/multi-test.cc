@@ -29,9 +29,8 @@ int main(int argc, char **argv)
         opts.describe();
 
     int max_num_threads = MAX(opts.num_producers, opts.num_consumers);
-    double secs, nsecs;
-    int items;
 
+    pair<Time,int> throughput;
     if (opts.use_large_test)
     {
         MultiQueue<vector<string> > Q(max_num_threads);
@@ -42,23 +41,18 @@ int main(int argc, char **argv)
         for (int i=0; i<100; i++)
            product.push_back(string("Test String Contents"));
 
-        pair<Time,int> throughput = test.run(product);
-        secs = (double) throughput.first.secs;
-        nsecs = (double) throughput.first.nsecs;
-        items = throughput.second;
+        throughput = test.run(product);
     }
     else
     {
         MultiQueue<int> Q(max_num_threads);
         BasicTest<MultiQueue<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
 
-        pair<Time,int> throughput = test.run(0);
-        secs = (double) throughput.first.secs;
-        nsecs = (double) throughput.first.nsecs;
-        items = throughput.second;
+        throughput = test.run(0);
     }
 
-    double time = secs + nsecs/1e9;
+    int items = throughput.second;
+    double time = ((double) throughput.first.secs) + ((double) throughput.first.nsecs)/1e9;
     if (opts.verbose)
         printf("throughput: %lf items/sec\n", items/time);
     else
