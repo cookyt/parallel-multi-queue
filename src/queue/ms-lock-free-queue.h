@@ -1,6 +1,7 @@
 #ifndef MS_LOCK_FREE_QUEUE_H
 #define MS_LOCK_FREE_QUEUE_H
 
+#include <cstdio>
 #include <cstddef> // used to define NULL
 #include "util.h"
 
@@ -58,18 +59,16 @@ namespace cvl
                     {
                         if (mynext == NULL)
                         {
-                            if (atomic::cas64((uint64_t *) &(tail->next), (uint64_t) mynext,
-                                        (uint64_t) node))
+                            if (atomic::cas(&(mytail->next), mynext, node))
                                 break;
                         }
                         else
                         {
-                            atomic::cas64((uint64_t *) &tail, (uint64_t) mytail,
-                                    (uint64_t) mynext);
+                            atomic::cas(&tail, mytail, mynext);
                         }
                     }
                 }
-                atomic::cas64((uint64_t *) &tail, (uint64_t) mytail, (uint64_t) node);
+                atomic::cas(&tail, mytail, node);
             }
 
             bool dequeue(T &result)
@@ -86,14 +85,12 @@ namespace cvl
                         {
                             if (mynext == NULL)
                                 return false;
-                            atomic::cas64((uint64_t *) &tail, (uint64_t) mytail, 
-                                    (uint64_t) mynext);
+                            atomic::cas(&tail, mytail, mynext);
                         }
                         else
                         {
                             result = *(mynext->data);
-                            if (atomic::cas64((uint64_t *) &head, (uint64_t) myhead,
-                                        (uint64_t) mynext))
+                            if (atomic::cas(&head, myhead, mynext))
                                 break;
                         }
                     }

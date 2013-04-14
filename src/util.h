@@ -7,7 +7,20 @@ namespace cvl
     namespace atomic
     {
         uint32_t fetchAndAdd(uint32_t volatile *, uint32_t);
-        bool cas64(uint64_t *, uint64_t, uint64_t);
+
+        /**
+         * Atomically compares the value at the given memory location to the given
+         * oldval and replaces it with newval if they are the same. Returns the value
+         * that was found in the memory location.
+         *
+         * Uses a GCC-specific bultin. Should be implemented in a more portable
+         * fashion.
+         */
+        template<typename T>
+        bool cas(T **addr, T *oldval, T *newval)
+        {
+            return __sync_bool_compare_and_swap(addr, oldval, newval);
+        }
     }
 
     namespace time
