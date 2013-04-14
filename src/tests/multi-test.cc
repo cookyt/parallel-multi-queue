@@ -47,7 +47,6 @@ int main(int argc, char **argv)
     {
         MultiQueue<int> Q(max_num_threads);
         BasicTest<MultiQueue<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
-
         throughput = test.run(0);
     }
 

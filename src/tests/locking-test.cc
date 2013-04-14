@@ -4,8 +4,13 @@
 #include "tests/basic-test.h"
 #include "tests/parse-cmd-line.h"
 
+// For small tests
 extern template class cvl::ms::TwoLockQueue<int>;
 extern template class BasicTest<cvl::ms::TwoLockQueue<int>, int>;
+
+// For large tests
+extern template class cvl::ms::TwoLockQueue<std::vector<std::string> >;
+extern template class BasicTest<cvl::ms::TwoLockQueue<std::vector<std::string> >, std::vector<std::string> >;
 
 int main(int argc, char **argv)
 {
@@ -22,8 +27,15 @@ int main(int argc, char **argv)
     pair<Time,int> throughput;
     if (opts.use_large_test)
     {
-        fprintf(stderr, "Large items not implemented yet\n");
-        return 1;
+        TwoLockQueue<vector<string> > Q;
+        BasicTest<TwoLockQueue<vector<string> >, vector<string> > test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+
+        // Generate the "large" items. large vector of strings should do it.
+        vector<string> product;
+        for (int i=0; i<100; i++)
+           product.push_back(string("Test String Contents"));
+
+        throughput = test.run(product);
     }
     else
     {
