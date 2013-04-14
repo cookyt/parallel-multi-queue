@@ -145,7 +145,7 @@ class BasicTest
         using cvl::time::Time;
 
         Time before = cvl::time::now_real();
-        bar.wait();
+        bar.wait(); // wait until all threads are ready
         sleep(time_limit);
         Time elapsed = cvl::time::now_real();
         threads.interrupt_all();
