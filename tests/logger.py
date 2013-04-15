@@ -77,6 +77,7 @@ class Logger:
 
         for cnum in range(1, self.consumers+1):
             for pnum in range(1, self.producers+1):
+                print "trying: consumers=%d, producers=%d"%(cnum, pnum)
                 cmdpipe = os.popen("%s -c %d -p %d"%(self.exe_name, cnum, pnum))
                 time_str = cmdpipe.read()
                 try:

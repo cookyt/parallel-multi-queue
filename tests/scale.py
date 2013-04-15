@@ -33,23 +33,37 @@ for fname in sys.argv[1:]:
     f = open(fname, "r")
     nf = open("%s-scaled"%fname, "w")
     all_data[fname] = [nf, list()]
+
     local_min = float("inf")
     local_max = 0.0
-    for line in f.readlines():
-        if line[0] == "#": # Copy comments to new file, and skip
-            nf.write(line)
+    max_consumers = 0.0
+    max_producers = 0.0
+
+    lines = f.readlines()
+    for line in lines[1:]:
+        if line[0] == "#":
             continue
         vals = line.split()
 
+        consumers = int(vals[0])
+        producers = int(vals[1])
         throughput = float(vals[2])
+
         max_val = max(throughput, max_val)
         min_val = min(throughput, min_val)
+
         local_max = max(throughput, local_max)
         local_min = min(throughput, local_min)
 
-        all_data[fname][1].append((int(vals[0]), int(vals[1]), throughput))
+        max_consumers = max(consumers, max_consumers)
+        max_producers = max(producers, max_producers)
+
+        all_data[fname][1].append((consumers, producers, throughput))
     all_data[fname].append(local_min)
     all_data[fname].append(local_max)
+    all_data[fname].append(max_consumers+1)
+    all_data[fname].append(max_producers+1)
+    all_data[fname].append(lines[0].replace("#", "").strip())
     f.close()
 
 d_val = max_val - min_val
@@ -62,7 +76,19 @@ def scale(val):
 
 for (fname, data) in all_data.iteritems():
     nf = data[0]
+
+    nf.write("#!/usr/bin/env gnuplot\n")
     nf.write("# min=%f, max=%f\n"%(data[2], data[3]))
+    nf.write("set title '%s'\n"%data[6])
+    nf.write("set size ratio -1\n")
+    nf.write("set xrange [0:%d]\n"%data[4])
+    nf.write("set yrange [0:%d]\n"%data[5])
+    nf.write("set xlabel 'consumers'\n")
+    nf.write("set ylabel 'producers'\n")
+    nf.write("plot '-' with circles fill solid notitle\n")
     for point in data[1]:
         nf.write("%d\t%d\t%f\n"%(point[0], point[1], scale(point[2])))
+    nf.write("e\n")
+    nf.write("pause -1")
+
     nf.close()
