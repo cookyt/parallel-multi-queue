@@ -3,6 +3,7 @@
 
 #include <cstddef> // used to define NULL
 #include <boost/thread/mutex.hpp>
+#include "util.h"
 
 namespace cvl
 {
@@ -28,6 +29,7 @@ namespace cvl
                 }
                 T *data;
                 Node *next;
+                char padding[kCacheLineSize];
             };
 
             Node *head;
