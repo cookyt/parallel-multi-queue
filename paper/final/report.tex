@@ -3,7 +3,7 @@
 \setlength{\parskip}{\baselineskip}
 \setlength{\parindent}{0pt}
 
-\usepackage[ruled,vlined]{algorithm2e} %Uses version 3.9
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e} %Uses version 3.9
 \usepackage{url}
 \usepackage{graphicx}
 \usepackage{caption}
@@ -44,19 +44,20 @@ instances of a two-lock queue structure.
 
 %History
 \section{Algorithms}
-%Concepts
 The concepts surrounding the MultiQueue are simple enough. The structure keeps
 an internal list of concurrent queues and two counters that keep track how many
 enqueue and dequeue operations have been made on the MultiQueue. In essence,
 the internal list is treated like a circular array based queue of queues, and
 the two counters essentially point to the head and tail of this queue. The
-intent is to isolate the enqueue and dequeue operations of more complex queue
-algorithms so that, on average, each queue has only one producer and one
-consumer operating on it. Because of the ordering enforced by the MultiQueue,
-all the queues in the circular array constitute a single large queue.
+intent is to isolate the enqueue and dequeue operations of the more complex
+internal concurrent queue algorithms so that, on average, each queue has only
+one producer and one consumer operating on it. Because of the ordering enforced
+by the MultiQueue, all the queues in the circular array constitute a single
+large queue, so, externally, the interface to the MultiQueue remains the same
+as the interface to a regular concurrent queue.
 
 %Pseudocode
-\begin{small}
+\begin{scriptsize}
 \begin{algorithm}[H]
 \SetKwIF{blk}{}{}{}{}{}{}{} % Hacky way to get vline to work properly with blocks
 \SetKwFunction{Init}{void initialize}
@@ -66,6 +67,7 @@ all the queues in the circular array constitute a single large queue.
 \SetKwFunction{ideq}{internalDequeue}
 \SetKwFunction{iinit}{internalInitialize}
 \SetKwFunction{FAA}{fetchAndAdd}
+\SetKwFunction{CAS}{CAS}
 \SetKwFunction{nexttwo}{nextPowerOf2}
 \SetKwFunction{ladd}{listAdd}
 \SetKw{Continue}{continue}
@@ -83,7 +85,7 @@ all the queues in the circular array constitute a single large queue.
 \Struct InternalQueue
 \blk{}{
     \tcp{The internal structure of this is not important as long as supports
-    the concurrent enqueue and dequeue operations}
+    the concurrent enqueue and dequeue operations.}
 }
 
 \Struct MultiQueue
@@ -140,23 +142,25 @@ all the queues in the circular array constitute a single large queue.
         \it{result}}
 \Deq{MultiQueue Q, data\_t\_ptr result}
 \blk{}{
-    \If(\tcp*[f]{quit if queue is empty}){Q.consumer\_ptr $\ge$ Q.producer\_counter}{
-        \Return{false}\;
+    \While{true}{ \label{getloop}
+        next\_empty = Q.consumer\_counter\;
+        \If(\tcp*[f]{quit if queue is empty}){next\_empty $\ge$ Q.producer\_counter}{ \label{deqempty}
+            \Return{false}\;
+        }
+        \If{\CAS{\&Q.consumer\_counter, next\_empty, next\_empty $+$ 1}}{ \label{deqcas}
+            Break\;
+        }
     }
-    next\_empty = \FAA{Q.consumer\_counter, 1}\;
     next\_queue = Q.queues[next\_empty $\&$ Q.mask]\;
     \BlankLine
-    \tcp{Keep trying to dequeue an item until one is found. This loop is needed
-         to prevent race conditions between a consumer dequeueing and a producer
-         enqueueing at the same time}
-    \While{$\neg$\ideq{next\_queue, result}}{
+    \While{$\neg$\ideq{next\_queue, result}}{ \label{deqloop}
         \Continue
     }
     \Return{true}\;
     
 }
 \end{algorithm}
-\end{small}
+\end{scriptsize}
 
 \section{Correctness}
 Typically, each operation of a MultiQueue works in isolation of others. That
@@ -169,16 +173,65 @@ MultiQueue is wrapping access to. Because of this, the correctness of the
 MultiQueue is fundementally tied to the queue it uses as a base. Nonetheless,
 there are still a few guarantees we can make about the MultiQueue.
 
+The enqueue operation is as lively as the enqueue of the internal queue
+operation. It uses no locks and simply bars a call to the internal enqueue with
+an atomic fetch and add. When multiple threads are contending on the fetch and
+add, at least one is always allowed through, so we are guaranteed progress
+there. The only situation where progress might not be guaranteed is when the
+producer counter wraps around the array, and two producer threads are made to
+operate on the same internal queue. For this reason, the liveliness of the
+MultiQueue enqueue is bounded by the liveliness of the internal enqueue.
+
+The dequeue operation contains two loops which appear to proclude liveliness
+for it, but I will show that progress is guaranteed with these loops to the
+same degree that it is guaranteed for the internal dequeue.
+
+The loop on line \ref{getloop} tries to allocate a single queue to a consumer.
+There are only two ways to leave this loop.
+
+\begin{enumerate}
+\item The condition on line \ref{deqempty} is triggered. In this case, the
+producer counter is falling behind the consumer counter, so the queue is, for
+all intents and purposes, empty.
+
+\item The compare and swap operation on line \ref{deqcas} succedes. In this
+case, the consumer has successfully taken a queue, and can continue to the next
+loop.
+\end{enumerate}
+
+Failing the CAS is the only way for a thread to continue the loop, but one
+thread contending on the CAS is always guaranteed to succeed, so at least one
+thread will always leave the loop. That leaves the second loop:
+
 \begin{enumerate}
 \item For every position in the queue list which is greater than the consumer
 counter and less than the producer counter, either there is at least one item
 in the corresponding queue, or there is a producer performing an enqueue
-operation in that slot. 
+operation in that slot.
 
-\item The consumer counter never exceedes the producer counter. This is
-prevented by first conditional statement in the dequeue operation. Both
-counters are only ever incremented by one, so 
+This is true because the counters only increment by one when an operation is
+started on a queue, so whenever the producer counter is higher than the
+consumer counter, then some number of consumers have tried to enqueue an item
+in that slot and have either succeeded or are still working.
+
+\item The consumer counter never exceedes the producer counter. The loop on
+line \ref{getloop} allocates a queue to a consumer only if the consumer counter
+is less than the producer counter.
 \end{enumerate}
+
+With these two conditions, we can be sure that if a dequeue on a MultiQueue
+ever leads to a call to a dequeue on an internal queue (i.e. if line
+\ref{deqloop} is ever reached), then there will be an item for the consumer to
+dequeue, even if this item comes from a producer who has not yet finished its
+operation. As such we can be sure that the loop on \ref{deqloop} will terminate
+if and only if the internal dequeue is guaranteed to terminate.
+
+As with the enqueue operation, it is possible for a consumer to wrap around the
+queue, leading to two threads performing the same operation on the same queue.
+Again, this means that the livelieness of MultiQueue dequeue is bounded by the
+livelieness of the internal dequeue.
+
+
 
 \section{Performance}
 \subsection{Setup}
