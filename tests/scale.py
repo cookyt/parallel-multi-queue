@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import sys
+import hashlib
+hash
 
 """This script takes the output produced by logger.py, and scales the results
 so that they can be passed into a grapher. It takes several files on the
@@ -10,6 +12,10 @@ and maximum.
 The scaling is between 0.01 and 0.5, and it is distributed so that the area of
 a circle with the scaled value as a radius is proportional to the size of the
 original value, globally.
+
+The scaled files are saved in the 'scaled' directory, and have the same names
+as the input files, prefixed with a SHA1 hash which is the same for all files
+which were scaled together
 """
 
 min_rad = 0.01
@@ -25,13 +31,21 @@ d_val = 0.0
     2. A list of 3-tuples with the old data: (consumer, producer, throughput)
     3. The min throughput for the above data
     4. The max throughput for the above data
+    5. The max number of consumers
+    6. The max number of producers
+    7. The first line from the file (used as a title)
 """
 all_data = dict()
+
+# Short sha1 hash of all input values, to track files which have been scaled
+# together
+key = hashlib.sha1("".join(sys.argv[1:])).hexdigest()[:6]
 
 # Read all values into memory, find global max and min
 for fname in sys.argv[1:]:
     f = open(fname, "r")
-    nf = open("%s-scaled"%fname, "w")
+    newname = "scaled/%s-%s"%(key,fname[fname.rfind('/')+1:])
+    nf = open(newname, "w")
     all_data[fname] = [nf, list()]
 
     local_min = float("inf")
@@ -59,11 +73,13 @@ for fname in sys.argv[1:]:
         max_producers = max(producers, max_producers)
 
         all_data[fname][1].append((consumers, producers, throughput))
+
     all_data[fname].append(local_min)
     all_data[fname].append(local_max)
     all_data[fname].append(max_consumers+1)
     all_data[fname].append(max_producers+1)
-    all_data[fname].append(lines[0].replace("#", "").strip())
+    all_data[fname].append(lines[0].replace("#", "").strip()) # title
+
     f.close()
 
 d_val = max_val - min_val
