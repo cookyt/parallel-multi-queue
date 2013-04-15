@@ -57,11 +57,15 @@ namespace cvl
 
         bool dequeue(T &result)
         {
-            // Causes a problem if the integer overflows.
-            if (dequeue_cur >= enqueue_cur) // Make sure there are items left to dequeue
-                return false;
-
-            unsigned int mycur = atomic::fetchAndAdd(&dequeue_cur, 1); // Gain exclusivity to a queue
+            unsigned int mycur;
+            for (;;)
+            {
+                mycur = dequeue_cur;
+                if (mycur >= enqueue_cur)
+                    return false;
+                if (__sync_bool_compare_and_swap(&dequeue_cur, mycur, mycur+1))
+                    break;
+            }
 
             // I don't like having this loop here, without it, a consumer may
             // see an empty queue when in reality, the producer hasn't finished
