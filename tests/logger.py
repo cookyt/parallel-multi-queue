@@ -26,6 +26,16 @@ This file has three columns:
     3. the throughput of the test (items/sec)
 """
 
+def script_dir():
+    """Parses sys.argv[0] and gets the directory the script is in, including
+    the trailing slash Returns the empty string on failure.
+    """
+    try:
+        pos = sys.argv[0].rindex('/')
+        return sys.argv[0][:pos]+"/"
+    except ValueError:
+        return ""
+
 class Logger:
     def __init__(self, logname, exe_name, consumers, producers):
         self.exe_name = exe_name
@@ -108,7 +118,7 @@ if __name__ == "__main__":
         raise SystemExit
 
     time = dt.datetime.now()
-    logname = "tests/data/%s.dat"%(time.strftime("%Y%m%d:%H%M"));
+    logname = script_dir()+"data/%s.dat"%(time.strftime("%Y%m%d:%H%M"));
 
     logger = Logger(logname, exe_name, consumers, producers)
     logger.run()
