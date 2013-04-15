@@ -100,6 +100,9 @@ if __name__ == "__main__":
         min_rad2 = min_rad*min_rad
         return (((val-min_val)/d_val)*d_rad2 + min_rad2)**0.5
 
+    def scale_lin(val):
+        return (((val-min_val)/d_val)*d_rad + min_rad)
+
     for (fname, data) in all_data.iteritems():
         nf = data[0]
 

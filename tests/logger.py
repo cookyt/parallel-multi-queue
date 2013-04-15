@@ -87,11 +87,12 @@ class Logger:
 
         for cnum in range(1, self.consumers+1):
             for pnum in range(1, self.producers+1):
-                print "trying: consumers=%d, producers=%d"%(cnum, pnum)
+                print "trying: consumers=%d, producers=%d"%(cnum, pnum),
                 cmdpipe = os.popen("%s -c %d -p %d"%(self.exe_name, cnum, pnum))
                 time_str = cmdpipe.read()
                 try:
                     time = float(time_str)
+                    print time
                     self.data.append((cnum, pnum, time));
                 except ValueError:
                     sys.stderr.write("Error with trial:\n"

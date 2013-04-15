@@ -69,9 +69,6 @@ namespace cvl
             // in the queue, making the non-linearizable
             while (!queues[mycur&mask]->queue.dequeue(result))
             {
-                // TODO, waiting for another thread, try exponential backoff
-                // here, and see if it helps
-
                 // If there are producers, a consumer might get stuck here
                 // forever. I need a way out.
                 boost::this_thread::interruption_point();
