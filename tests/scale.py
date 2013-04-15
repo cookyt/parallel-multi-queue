@@ -97,8 +97,7 @@ if __name__ == "__main__":
 
     d_val = max_val - min_val
 
-    def scale(val):
-        """Returns a scaling of the given value"""
+    def scale_area(val):
         d_rad2 = d_rad*d_rad
         min_rad2 = min_rad*min_rad
         return (((val-min_val)/d_val)*d_rad2 + min_rad2)**0.5
@@ -110,6 +109,13 @@ if __name__ == "__main__":
 
     def scale_lin(val):
         return (((val-min_val)/d_val)*d_rad + min_rad)
+
+    def scale_lin_min0(val):
+        return ((val/max_val)*d_rad + min_rad)
+
+    def scale(val):
+        """Returns a scaling of the given value"""
+        return scale_min0(val)
 
     def getTitle(s):
         if s.find("locking") != -1:
@@ -139,7 +145,7 @@ if __name__ == "__main__":
         nf.write("set output '%s'\n"%svgFname(data[7]))
         nf.write("plot '-' with circles fill solid notitle\n")
         for point in data[1]:
-            nf.write("%d\t%d\t%f\n"%(point[0], point[1], scale_min0(point[2])))
+            nf.write("%d\t%d\t%f\n"%(point[0], point[1], scale(point[2])))
         nf.write("e\n")
 
         nf.close()

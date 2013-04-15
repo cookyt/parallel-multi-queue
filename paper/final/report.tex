@@ -1,11 +1,21 @@
 \documentclass[12pt]{report}
+\usepackage[margin=1in,footskip=0.25in]{geometry}
+\setlength{\parskip}{\baselineskip}
+\setlength{\parindent}{0pt}
+
 \usepackage[ruled,vlined]{algorithm2e} %Uses version 3.9
 \usepackage{url}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
 
 \newcommand{\TODO}[1]{}
+% \renewcommand{\familydefault}{\sfdefault} % use sans-serif font
+\usepackage{times}
 
 \begin{document}
-\title{Reducing Contention in Concurrent Queues: Midterm Report}
+\title{Reducing Contention in Concurrent Queues}
 \author{Carlos Valera \\
     University of Central Florida \\
     \texttt{cvaleraleon@knights.ucf.edu}}
@@ -30,7 +40,7 @@ managing contention between queues to gain performance. I call the structure
 which does this a MultiQueue. The method primarily builds on the two lock queue
 introduced by Micheal and Scott\cite{michael1996}and tries to improve
 concurrency by distributing the work presented to the queue amongst multiple
-instances of a two-lock queue structure.
+instances of a two-lock queue structure. 
 
 %History
 \section{Algorithms}
@@ -46,7 +56,7 @@ consumer operating on it. Because of the ordering enforced by the MultiQueue,
 all the queues in the circular array constitute a single large queue.
 
 %Pseudocode
-\begin{scriptsize}
+\begin{small}
 \begin{algorithm}[H]
 \SetKwIF{blk}{}{}{}{}{}{}{} % Hacky way to get vline to work properly with blocks
 \SetKwFunction{Init}{void initialize}
@@ -130,7 +140,7 @@ all the queues in the circular array constitute a single large queue.
         \it{result}}
 \Deq{MultiQueue Q, data\_t\_ptr result}
 \blk{}{
-    \If(\tcp*[f]{quit if queue is empty}){Q.consumer\_ptr$<$Q.producer\_counter}{
+    \If(\tcp*[f]{quit if queue is empty}){Q.consumer\_ptr $\ge$ Q.producer\_counter}{
         \Return{false}\;
     }
     next\_empty = \FAA{Q.consumer\_counter, 1}\;
@@ -146,10 +156,97 @@ all the queues in the circular array constitute a single large queue.
     
 }
 \end{algorithm}
-\end{scriptsize}
+\end{small}
 
+\section{Correctness}
+Typically, each operation of a MultiQueue works in isolation of others. That
+is, each thread will acquire one queue to work on, and can generally assume
+that it is the only thread working on it. However, there are situations where a
+faster thread may wrap around the queue, colliding with a slower thread. In
+this circumstance, the correctness of the following sequence of events is
+solely dependant on the correctness guarantees of the datastructure that the
+MultiQueue is wrapping access to. Because of this, the correctness of the
+MultiQueue is fundementally tied to the queue it uses as a base. Nonetheless,
+there are still a few guarantees we can make about the MultiQueue.
 
+\begin{enumerate}
+\item For every position in the queue list which is greater than the consumer
+counter and less than the producer counter, either there is at least one item
+in the corresponding queue, or there is a producer performing an enqueue
+operation in that slot. 
 
+\item The consumer counter never exceedes the producer counter. This is
+prevented by first conditional statement in the dequeue operation. Both
+counters are only ever incremented by one, so 
+\end{enumerate}
+
+\section{Performance}
+\subsection{Setup}
+The tests were designed to compare throughput of items through a queue. Each
+thread was designated as either a consumer or a producer, and would
+continuously cycle through performing its operation on a queue (dequeueing and
+enqueueing, respectively), and doing a small amount of work. This cycle was
+continued for some amount of time, and the number of items which made it
+through the queue were tallied at the end. The number of internal queues used
+by the MultiQueue in these tests was set to the maximum of the producer and
+consumer threads that would be working on it.
+
+Due to time constraints, I was only able to test two cases: a two-lock queue
+adapted from Micheal and Scott's algorithms\cite{michael1996}, and a MultiQueue
+with a two-lock queue as the base. All tests were conducted on an Intel Core
+i5-2500K CPU, which has four cores. The source code for the implementation of
+the algorithms and the tests can be found online at:
+\url{https://github.com/cookyt/parallel-multi-queue}
+
+\subsection{Results}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{multiqueue.png}
+        \caption{min=1856809, max=5150969}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{two-lock.png}
+        \caption{min=2707499, max=4027409}
+    \end{subfigure}
+    \caption{Throughput of the queues when subjected to continuous load for 5
+    seconds. The area of each circle is proportional to the throughput for a
+    queue with the given number of producer and consumer threads.}
+    \label{smalltest}
+\end{figure}
+
+Figure \ref{smalltest} is the result of running both the MultiQueue and the
+two-lock queue for various configurations of consumers and producers. The tests
+stop at four threads because the testing computer only has four cores, and
+trying to scale much beyond the number of cores available produces erratic
+results.
+
+Applying the MultiQueue had the effect of moderately increasing throughput when
+the number of consumers and producers ar both large. Interestingly, if the
+thread count for either consumers or producers is one, using the MultiQueue
+causes a performance degredation.
+
+The use of a shared counter in the MultiQueue provides a single point of
+contention. Compared to the contention point offered by the head and tail locks
+of the two-lock queue, the counter is a smaller penalty. Overall, there is a
+trade-off between having a thread spin on a lock to perform an operation, and
+having it wait on a counter to gain access to a queue. The difference is that
+when a thead gains access to a queue in the MultiQueue, it is still possible
+for other threads to gain access to other queues.
+
+When there is only one consumer or one producer, the every other thread is,
+essentially, waiting for that thread to complete its operation before moving
+on. As a result, the likelyhood of having multiple threads performing their
+operations on multiple queues in parallel is small unless the one
+``bottleneck'' thread performs its operation much faster than the other threads
+perform theirs. It would seem the situation should not be much better than
+simply using a single two-lock queue; however the lack of parallelism from the
+multiple queues combined with the overhead of spinning on a shared counter
+results in performance being worse than a two-lock queue under similar
+conditions.
 
 
 \section{Work to be Done}

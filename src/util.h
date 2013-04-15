@@ -17,7 +17,7 @@ namespace cvl
          * fashion.
          */
         template<typename T>
-        bool cas(T **addr, T *oldval, T *newval)
+        bool cas(T *addr, T oldval, T newval)
         {
             return __sync_bool_compare_and_swap(addr, oldval, newval);
         }
