@@ -2,6 +2,7 @@
 #define MULTI_QUEUE_H
 
 #include <vector>
+#include <boost/thread.hpp>
 #include "queue/ms-two-lock-queue.h"
 #include "util.h"
 
@@ -62,8 +63,19 @@ namespace cvl
 
             unsigned int mycur = atomic::fetchAndAdd(&dequeue_cur, 1); // Gain exclusivity to a queue
 
-            // I don't like having this loop here, but it makes sense to have it.
-            while (!queues[mycur&mask]->queue.dequeue(result)) {}
+            // I don't like having this loop here, without it, a consumer may
+            // see an empty queue when in reality, the producer hasn't finished
+            // yet. This might allow the cur item pointer to skip over an item
+            // in the queue, making the non-linearizable
+            while (!queues[mycur&mask]->queue.dequeue(result))
+            {
+                // TODO, waiting for another thread, try exponential backoff
+                // here, and see if it helps
+
+                // If there are producers, a consumer might get stuck here
+                // forever. I need a way out.
+                boost::this_thread::interruption_point();
+            }
             return true;
         }
     };
