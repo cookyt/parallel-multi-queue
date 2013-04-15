@@ -21,7 +21,15 @@ namespace cvl
         int mask;
         unsigned int volatile enqueue_cur;
         unsigned int volatile dequeue_cur;
-        std::vector<ms::TwoLockQueue<T> *> queues;
+
+        // includes padding to avoid false sharing
+        struct PaddedQueue
+        {
+            ms::TwoLockQueue<T> queue;
+            char padding[kCacheLineSize];
+        };
+
+        std::vector<PaddedQueue *> queues;
 
       public:
         MultiQueue(int num_queues_) : 
@@ -31,7 +39,7 @@ namespace cvl
             mask = num_queues-1;
             queues.reserve(num_queues);
             for (int i=0; i<num_queues; ++i)
-                queues.push_back(new ms::TwoLockQueue<T>());
+                queues.push_back(new PaddedQueue());
         }
 
         ~MultiQueue()
@@ -43,7 +51,7 @@ namespace cvl
         void enqueue(const T &item)
         {
             unsigned int mycur = atomic::fetchAndAdd(&enqueue_cur, 1);
-            queues[mycur&mask]->enqueue(item);
+            queues[mycur&mask]->queue.enqueue(item);
         }
 
         bool dequeue(T &result)
@@ -55,7 +63,7 @@ namespace cvl
             unsigned int mycur = atomic::fetchAndAdd(&dequeue_cur, 1); // Gain exclusivity to a queue
 
             // I don't like having this loop here, but it makes sense to have it.
-            while (!queues[mycur&mask]->dequeue(result)) {}
+            while (!queues[mycur&mask]->queue.dequeue(result)) {}
             return true;
         }
     };

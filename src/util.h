@@ -44,6 +44,9 @@ namespace cvl
         Time now_real();
     }
 
+    // In bytes. Found in file:
+    // /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size
+    const int kCacheLineSize = 64;
     int nextPow2(int n);
 }
 
