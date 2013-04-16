@@ -6,6 +6,71 @@ buffer, and trying to give each thread access to exactly one at a time. The
 hope is that with multiple threads working on different queues, contention
 between threads is lessened.
 
+Directory Layout
+----------------
++ bin/
+  Compiled executable binaries
+
++ doc/
+  Documentation used to research topic
+
++ obj/
+  Linkable object files
+
++ paper/
+  Latex source for papers
+
++ src/
+  Source code
+
++ tests/
+  Testing scripts and data from various test runs
+
+Build Information
+---------------------
+### Dependancies
++ Only tested on 64 bit Linux, may not work elsewhere
++ Relies on librealtime (Linux specific, and maybe BSD) to accuately time tests
++ Only compiles with GCC as it uses GCC's wrappers to x86 atomic primatives
+  (compiled with version 4.6)
++ Needs libboost-thread
+
+### Building and Running
+Just run `make` to compile the source. This should generate some executable
+binaries in the `bin/` directory which correspond to testing binaries for a
+two-lock queue and a multiqueue. Each executable runs a test which measures the
+throughput of a queue under load from a given number of producer and consumer
+threads. They accept the following flags:
+
+    -l       : use large item test (default false)
+    -s       : use small item test (default true)
+    -p <num> : specify number of producers (default 2)
+    -c <num> : specify number of consumers (default 2)
+    -t <num> : specify time to run in seconds (default 5)
+    -h       : prints the help text
+    -v       : verbose
+
+The default behavior is to run the test and print to stdout the throughput of
+the queue in items per second.
+
+### Testing Scripts
+The `tests` directory contains two Python scripts which automatically tests an
+executable under various thread configurations.
+
+`logger.py` takes three arguments:
+1. Name of an executable from the `bin/` directory
+2. Number of consumer threads to test up to
+3. Number of producer threads to test up to
+
+It will generate a data file in the `tests/data/` directory. The file is named
+for the datetime the script was run at.
+
+`scale.py` takes a variable number of data files produced by `logger.py` and
+produces an equal number of gnuplot scripts which, when run, generate an SVG
+file which graph the throughput of each passed file. The generated graphs are
+scaled to the maximum of all logged values in the passed file arguments. The
+scripts are generated in the `tests/scaled/` directory.
+
 License
 -------
 Copyright (c) 2013 Carlos Valera
