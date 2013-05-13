@@ -4,7 +4,8 @@ OBJ = obj/util.o \
 	  obj/queue-two-lock.o obj/queue-lock-free.o obj/queue-multi.o
 INC = -Isrc/
 BIN = bin/locking-test bin/multi-test bin/lock-free-test
-CXXFLAGS = -g -DDEBUG=$(DEBUG)
+CXXFLAGS = -g -Wall -pthread -DDEBUG=$(DEBUG)
+
 LIBBOOST = -lboost_thread -lboost_system
 LIB = $(LIBBOOST) -lrt
 
@@ -12,6 +13,9 @@ all: $(BIN)
 
 bin/multi-test: src/tests/multi-test.cc obj/tests-multi.o obj/queue-multi.o obj/util.o obj/parse-cmd-line.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
+
+bin/bit-network-test: src/tests/mq-bit-network-test.cc obj/tests-two-lock.o obj/queue-two-lock.o obj/util.o obj/parse-cmd-line.o
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lrt -lpthread -std=c++11
 
 bin/locking-test: src/tests/locking-test.cc obj/tests-two-lock.o obj/queue-two-lock.o obj/util.o obj/parse-cmd-line.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
