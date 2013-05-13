@@ -36,7 +36,7 @@ class BasicTest
             global_throughput(global_throughput_)
         {}
 
-        Consumer(Consumer &de) :
+        Consumer(const Consumer &de) :
             Q(de.Q), bar(de.bar), local_throughput(de.local_throughput),
             global_throughput(de.global_throughput)
         {}
@@ -93,7 +93,7 @@ class BasicTest
         /**
          * Copy constructor. Needed for boost threads.
          */
-        Producer(Producer &eq) :
+        Producer(const Producer &eq) :
             Q(eq.Q), item(eq.item), bar(eq.bar)
         {}
 

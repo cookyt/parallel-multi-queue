@@ -5,17 +5,19 @@ OBJ = obj/util.o \
 INC = -Isrc/
 BIN = bin/locking-test bin/multi-test bin/lock-free-test
 CXXFLAGS = -g -DDEBUG=$(DEBUG)
+LIBBOOST = -lboost_thread -lboost_system
+LIB = $(LIBBOOST) -lrt
 
 all: $(BIN)
 
 bin/multi-test: src/tests/multi-test.cc obj/tests-multi.o obj/queue-multi.o obj/util.o obj/parse-cmd-line.o
-	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt -lrt
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
 bin/locking-test: src/tests/locking-test.cc obj/tests-two-lock.o obj/queue-two-lock.o obj/util.o obj/parse-cmd-line.o
-	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt -lrt
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
 bin/lock-free-test: src/tests/lock-free-test.cc obj/tests-lock-free.o obj/queue-lock-free.o obj/util.o obj/parse-cmd-line.o
-	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ -lboost_thread-mt -lrt
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
 obj/parse-cmd-line.o: src/tests/parse-cmd-line.cc src/tests/parse-cmd-line.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
