@@ -2,7 +2,7 @@
 #define UTIL_H
 #include <stdint.h>
 
-namespace cvl
+namespace util
 {
     namespace atomic
     {
@@ -44,10 +44,10 @@ namespace cvl
         Time now_real();
     }
 
-    // In bytes. Found in file:
+    // In bytes. Usually 64. Found in file:
     // /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size
     const int kCacheLineSize = 64;
     int nextPow2(int n);
 }
 
-#endif
+#endif // UTIL_H

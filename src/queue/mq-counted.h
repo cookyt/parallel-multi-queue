@@ -1,12 +1,12 @@
-#ifndef MULTI_QUEUE_H
-#define MULTI_QUEUE_H
+#ifndef MQ_COUNTED_H
+#define MQ_COUNTED_H
 
 #include <vector>
 #include <boost/thread.hpp>
-#include "queue/ms-two-lock-queue.h"
+#include "queue/ms-two-lock.h"
 #include "util.h"
 
-namespace cvl
+namespace mq
 {
     /** 
      * Experimental MultiQueue. It uses the a two-lock queue developed by
@@ -15,7 +15,7 @@ namespace cvl
      * object in the queues themselves.
      */
     template<typename T>
-    class MultiQueue
+    class counted
     {
       private:
         int num_queues;
@@ -26,36 +26,36 @@ namespace cvl
         // includes padding to avoid false sharing
         struct PaddedQueue
         {
-            ms::TwoLockQueue<T> queue;
-            char padding[kCacheLineSize];
+            ms::two_lock<T> queue;
+            char padding[util::kCacheLineSize];
         };
 
         std::vector<PaddedQueue *> queues;
 
       public:
-        MultiQueue(int num_queues_) : 
+        counted(int num_queues_) : 
             enqueue_cur(0), dequeue_cur(0)
         {
-            num_queues = nextPow2(num_queues_);
+            num_queues = util::nextPow2(num_queues_);
             mask = num_queues-1;
             queues.reserve(num_queues);
             for (int i=0; i<num_queues; ++i)
                 queues.push_back(new PaddedQueue());
         }
 
-        ~MultiQueue()
+        ~counted()
         {
             for (int i=0; i<num_queues; ++i)
                 delete queues[i];
         }
 
-        void enqueue(const T &item)
+        void push(const T &item)
         {
-            unsigned int mycur = atomic::fetchAndAdd(&enqueue_cur, 1);
-            queues[mycur&mask]->queue.enqueue(item);
+            unsigned int mycur = util::atomic::fetchAndAdd(&enqueue_cur, 1);
+            queues[mycur&mask]->queue.push(item);
         }
 
-        bool dequeue(T &result)
+        bool try_pop(T &result)
         {
             unsigned int mycur;
             for (;;)
@@ -71,7 +71,7 @@ namespace cvl
             // see an empty queue when in reality, the producer hasn't finished
             // yet. This might allow the cur item pointer to skip over an item
             // in the queue, making the non-linearizable
-            while (!queues[mycur&mask]->queue.dequeue(result))
+            while (!queues[mycur&mask]->queue.try_pop(result))
             {
                 // If there are producers, a consumer might get stuck here
                 // forever. I need a way out.
@@ -82,4 +82,4 @@ namespace cvl
     };
 }
 
-#endif
+#endif // MQ_COUNTED_QUEUE_H

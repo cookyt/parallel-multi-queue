@@ -13,24 +13,24 @@
  * Uses a GCC-specific bultin. Should be implemented in a more portable
  * fashion.
  */
-uint32_t cvl::atomic::fetchAndAdd(uint32_t volatile *addr, uint32_t val)
+uint32_t util::atomic::fetchAndAdd(uint32_t volatile *addr, uint32_t val)
 {
     return __sync_fetch_and_add(addr, val);
 }
 
-cvl::time::Time::Time(uint64_t secs_, uint64_t nsecs_) : 
+util::time::Time::Time(uint64_t secs_, uint64_t nsecs_) : 
     secs(secs_), nsecs(nsecs_)
 {}
 
-cvl::time::Time::Time(const Time &time) :
+util::time::Time::Time(const Time &time) :
     secs(time.secs), nsecs(time.nsecs)
 {}
 
-cvl::time::Time::Time() :
+util::time::Time::Time() :
     secs(0), nsecs(0)
 {}
 
-cvl::time::Time &cvl::time::Time::operator-=(const Time &time)
+util::time::Time &util::time::Time::operator-=(const Time &time)
 {
     secs -= time.secs;
     nsecs -= time.nsecs;
@@ -42,7 +42,7 @@ cvl::time::Time &cvl::time::Time::operator-=(const Time &time)
     return *this;
 }
 
-cvl::time::Time &cvl::time::Time::operator+=(const Time &time)
+util::time::Time &util::time::Time::operator+=(const Time &time)
 {
     secs += time.secs;
     nsecs += time.nsecs;
@@ -54,19 +54,19 @@ cvl::time::Time &cvl::time::Time::operator+=(const Time &time)
     return *this;
 }
 
-cvl::time::Time &cvl::time::Time::operator=(const Time &time)
+util::time::Time &util::time::Time::operator=(const Time &time)
 {
     secs = time.secs;
     nsecs = time.nsecs;
     return *this;
 }
 
-const cvl::time::Time &cvl::time::Time::operator-(const Time &time)
+const util::time::Time &util::time::Time::operator-(const Time &time)
 {
     return Time(*this) -= time;
 }
 
-const cvl::time::Time &cvl::time::Time::operator+(const Time &time)
+const util::time::Time &util::time::Time::operator+(const Time &time)
 {
     return Time(*this) += time;
 }
@@ -76,7 +76,7 @@ const cvl::time::Time &cvl::time::Time::operator+(const Time &time)
  * is user-space time, so concurrent threads will make it longer than the
  * wall-clock time
  */
-cvl::time::Time cvl::time::now_cpu()
+util::time::Time util::time::now_cpu()
 {
     struct timespec time;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time);
@@ -89,7 +89,7 @@ cvl::time::Time cvl::time::now_cpu()
  * difference between times from this function can measure the time elapsed in
  * a section of code.
  */
-cvl::time::Time cvl::time::now_real()
+util::time::Time util::time::now_real()
 {
     struct timespec time;
     clock_gettime(CLOCK_MONOTONIC, &time);
@@ -99,7 +99,7 @@ cvl::time::Time cvl::time::now_real()
 /**
  * Calculates the next power of two larger than the input.
  */
-int cvl::nextPow2(int n)
+int util::nextPow2(int n)
 {
     int cur = 1;
     while (cur < n)

@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include "tests/parse-cmd-line.h"
+#include "parse-cmd-line.h"
 
 CmdLineOpts::CmdLineOpts() :
     num_producers(2), num_consumers(2), time_to_run(5), use_large_test(false),

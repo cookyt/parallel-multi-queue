@@ -3,22 +3,21 @@
 #include <cstdlib>
 #include <cstdio>
 #include "queue.h"
-#include "tests/basic-test.h"
-#include "tests/parse-cmd-line.h"
+#include "tests/test-timed-throughput.h"
+#include "parse-cmd-line.h"
 
 // For small tests
-extern template class cvl::ms::LockFreeQueue<int>;
-extern template class BasicTest<cvl::ms::LockFreeQueue<int>, int>;
+extern template class ms::lock_free<int>;
+extern template class test::timed_throughput<ms::lock_free<int>, int>;
 
 // For large tests
-extern template class cvl::ms::LockFreeQueue<std::vector<std::string> >;
-extern template class BasicTest<cvl::ms::LockFreeQueue<std::vector<std::string> >, std::vector<std::string> >;
+extern template class ms::lock_free<std::vector<std::string> >;
+extern template class test::timed_throughput<ms::lock_free<std::vector<std::string> >, std::vector<std::string> >;
 
 int main(int argc, char **argv)
 {
     using namespace std;
-    using cvl::time::Time;
-    using namespace cvl::ms;
+    using util::time::Time;
 
     CmdLineOpts opts;
     if (parseCmdLineOpts(argc, argv, opts) != 0)
@@ -29,8 +28,8 @@ int main(int argc, char **argv)
     pair<Time,int> throughput;
     if (opts.use_large_test)
     {
-        LockFreeQueue<vector<string> > Q;
-        BasicTest<LockFreeQueue<vector<string> >, vector<string> > test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+        ms::lock_free<vector<string> > Q;
+        test::timed_throughput<ms::lock_free<vector<string> >, vector<string> > test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
 
         // Generate the "large" items. large vector of strings should do it.
         vector<string> product;
@@ -41,8 +40,8 @@ int main(int argc, char **argv)
     }
     else
     {
-        LockFreeQueue<int> Q;
-        BasicTest<LockFreeQueue<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+        ms::lock_free<int> Q;
+        test::timed_throughput<ms::lock_free<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
         throughput = test.run(0);
     }
 
