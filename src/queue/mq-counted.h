@@ -14,7 +14,7 @@ namespace mq
      * of the item via the copy constructor and pass around pointers to the
      * object in the queues themselves.
      */
-    template<typename T>
+    template<typename T, typename Q = ms::two_lock<T> >
     class counted
     {
       private:
@@ -26,7 +26,7 @@ namespace mq
         // includes padding to avoid false sharing
         struct PaddedQueue
         {
-            ms::two_lock<T> queue;
+            Q queue;
             char padding[util::kCacheLineSize];
         };
 
