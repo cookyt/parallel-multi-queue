@@ -9,4 +9,10 @@ int nextPow2(int n) {
   return cur;
 }
 
+void makeLargeItem(std::vector<std::string> *output) {
+  for (int i=0; i<100; i++) {
+    output->push_back(std::string("Test String Contents"));
+  }
+}
+
 }  // namespace util

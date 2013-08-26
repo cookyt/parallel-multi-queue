@@ -1,60 +1,49 @@
-#include <vector>
-#include <string>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
+
+#include <string>
+#include <vector>
 
 #include "queue.h"
+#include "test/timed-throughput-fixture.h"
 #include "test/timed-throughput.h"
 #include "util/parse-cmd-line.h"
+#include "util/util.h"
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-// For large item tests
-extern template class mq::counted<std::vector<std::string>>;
-extern template class test::timed_throughput<mq::counted<std::vector<std::string>>, std::vector<std::string>>;
-
-// For small item tests
-extern template class mq::counted<int>;
-extern template class test::timed_throughput<mq::counted<int>, int>;
-
+using mq::counted;
+using std::string;
+using std::vector;
+using test::timed_throughput;
+using test::timed_throughput_fixture;
 using util::CmdLineOpts;
+using util::makeLargeItem;
 using util::parseCmdLineOpts;
+using util::time::Time;
+
+extern template class counted<vector<string>>;
+extern template class counted<int>;
+
+typedef timed_throughput_fixture<counted<vector<string>>, vector<string>,
+                                 counted<int>, int> Fixture;
 
 int main(int argc, char **argv) {
-  using namespace std;
-  using util::time::Time;
-
   CmdLineOpts opts;
   if (parseCmdLineOpts(argc, argv, opts) != 0)
     return 1;
-  if (opts.verbose)
-    opts.describe();
-
   int max_num_threads = MAX(opts.num_producers, opts.num_consumers);
 
-  pair<Time,int> throughput;
-  if (opts.use_large_test) {
-    mq::counted<vector<string>> Q(max_num_threads);
-    test::timed_throughput<mq::counted<vector<string>>, vector<string>> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+  counted<vector<string>> large_queue(max_num_threads);
+  counted<int> small_queue(max_num_threads);
 
-    // Generate the "large" items. large vector of strings should do it.
-    vector<string> product;
-    for (int i=0; i<100; i++)
-       product.push_back(string("Test String Contents"));
+  vector<string> large_item;
+  int small_item = 0;
+  makeLargeItem(&large_item);
 
-    throughput = test.run(product);
-  } else {
-    mq::counted<int> Q(max_num_threads);
-    test::timed_throughput<mq::counted<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
-    throughput = test.run(0);
-  }
-
-  int items = throughput.second;
-  double time = ((double) throughput.first.secs) + ((double) throughput.first.nsecs)/1e9;
-  if (opts.verbose)
-    printf("throughput: %lf items/sec\n", items/time);
+  Fixture fixture(&large_queue, &large_item, &small_queue, &small_item);
+  if (fixture.run(argc, argv))
+    return 0;
   else
-    printf("%lf\n", items/time);
-
-  return 0;
+    return 1;
 }

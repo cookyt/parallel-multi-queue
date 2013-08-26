@@ -1,56 +1,39 @@
-#include <vector>
-#include <string>
 #include <cstdlib>
 #include <cstdio>
 
+#include <string>
+#include <vector>
+
 #include "queue.h"
+#include "test/timed-throughput-fixture.h"
 #include "test/timed-throughput.h"
-#include "util/parse-cmd-line.h"
+#include "util/util.h"
 
-// For small tests
-extern template class ms::lock_free<int>;
-extern template class test::timed_throughput<ms::lock_free<int>, int>;
+using ms::lock_free;
+using std::string;
+using std::vector;
+using test::timed_throughput;
+using test::timed_throughput_fixture;
+using util::makeLargeItem;
+using util::time::Time;
 
-// For large tests
-extern template class ms::lock_free<std::vector<std::string>>;
-extern template class test::timed_throughput<ms::lock_free<std::vector<std::string>>, std::vector<std::string>>;
+extern template class lock_free<int>;
+extern template class lock_free<vector<string>>;
 
-using util::CmdLineOpts;
-using util::parseCmdLineOpts;
+typedef timed_throughput_fixture<lock_free<vector<string>>, vector<string>,
+                                 lock_free<int>, int> Fixture;
 
 int main(int argc, char **argv) {
-  using namespace std;
-  using util::time::Time;
+  lock_free<vector<string>> large_queue;
+  lock_free<int> small_queue;
 
-  CmdLineOpts opts;
-  if (parseCmdLineOpts(argc, argv, opts) != 0)
-    return 1;
-  if (opts.verbose)
-    opts.describe();
+  int small_item = 0;
+  vector<string> large_item;
+  makeLargeItem(&large_item);
 
-  pair<Time,int> throughput;
-  if (opts.use_large_test) {
-    ms::lock_free<vector<string> > Q;
-    test::timed_throughput<ms::lock_free<vector<string>>, vector<string>> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
-
-    // Generate the "large" items. large vector of strings should do it.
-    vector<string> product;
-    for (int i=0; i<100; i++)
-       product.push_back(string("Test String Contents"));
-
-    throughput = test.run(product);
-  } else {
-    ms::lock_free<int> Q;
-    test::timed_throughput<ms::lock_free<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
-    throughput = test.run(0);
-  }
-
-  int items = throughput.second;
-  double time = ((double) throughput.first.secs) + ((double) throughput.first.nsecs)/1e9;
-  if (opts.verbose)
-    printf("throughput: %lf items/sec\n", items/time);
+  Fixture fixture(&large_queue, &large_item, &small_queue, &small_item);
+  if (fixture.run(argc, argv))
+    return 0;
   else
-    printf("%lf\n", items/time);
-
-  return 0;
+    return 1;
 }

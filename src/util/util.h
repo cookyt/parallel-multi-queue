@@ -1,6 +1,9 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <vector>
+#include <string>
+
 #include <stdint.h>
 
 namespace util {
@@ -13,6 +16,11 @@ const int kCacheLineSize = 64;
  * Calculates the next power of two larger than the input.
  */
 int nextPow2(int n);
+
+/**
+ * Makes a large vector of strings.
+ */
+void makeLargeItem(std::vector<std::string> *output);
 
 }  // namespace util
 
