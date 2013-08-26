@@ -3,17 +3,22 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include "parse-cmd-line.h"
 #include "queue.h"
 #include "test/timed-throughput.h"
+#include "util/parse-cmd-line.h"
 
-// For small tests
-extern template class ms::lock_free<int>;
-extern template class test::timed_throughput<ms::lock_free<int>, int>;
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-// For large tests
-extern template class ms::lock_free<std::vector<std::string>>;
-extern template class test::timed_throughput<ms::lock_free<std::vector<std::string>>, std::vector<std::string>>;
+// For large item tests
+extern template class mq::counted<std::vector<std::string>>;
+extern template class test::timed_throughput<mq::counted<std::vector<std::string>>, std::vector<std::string>>;
+
+// For small item tests
+extern template class mq::counted<int>;
+extern template class test::timed_throughput<mq::counted<int>, int>;
+
+using util::CmdLineOpts;
+using util::parseCmdLineOpts;
 
 int main(int argc, char **argv) {
   using namespace std;
@@ -25,10 +30,12 @@ int main(int argc, char **argv) {
   if (opts.verbose)
     opts.describe();
 
+  int max_num_threads = MAX(opts.num_producers, opts.num_consumers);
+
   pair<Time,int> throughput;
   if (opts.use_large_test) {
-    ms::lock_free<vector<string> > Q;
-    test::timed_throughput<ms::lock_free<vector<string>>, vector<string>> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+    mq::counted<vector<string>> Q(max_num_threads);
+    test::timed_throughput<mq::counted<vector<string>>, vector<string>> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
 
     // Generate the "large" items. large vector of strings should do it.
     vector<string> product;
@@ -37,8 +44,8 @@ int main(int argc, char **argv) {
 
     throughput = test.run(product);
   } else {
-    ms::lock_free<int> Q;
-    test::timed_throughput<ms::lock_free<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+    mq::counted<int> Q(max_num_threads);
+    test::timed_throughput<mq::counted<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
     throughput = test.run(0);
   }
 

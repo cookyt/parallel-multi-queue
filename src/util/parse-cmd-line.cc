@@ -1,6 +1,9 @@
 #include <cstdio>
 #include <cstdlib>
-#include "parse-cmd-line.h"
+
+#include "util/parse-cmd-line.h"
+
+namespace util {
 
 CmdLineOpts::CmdLineOpts()
     : num_producers(2)
@@ -68,3 +71,5 @@ int parseCmdLineOpts(int argc, char **argv, CmdLineOpts &opts) {
   }
   return 0;
 }
+
+}  // namespace util

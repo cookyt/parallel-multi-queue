@@ -3,8 +3,10 @@
 
 #include <vector>
 #include <boost/thread.hpp>
+
 #include "queue/ms/two-lock.h"
-#include "util.h"
+#include "util/atomic.h"
+#include "util/util.h"
 
 namespace mq {
 
@@ -56,6 +58,9 @@ class counted {
       mycur = dequeue_cur;
       if (mycur >= enqueue_cur)
         return false;
+
+      // TODO(cookyt): this shouldn't be using the GCC-specific implementation
+      // of CAS. Replace it with C++11 atomics
       if (__sync_bool_compare_and_swap(&dequeue_cur, mycur, mycur+1))
         break;
     }

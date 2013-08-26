@@ -1,5 +1,7 @@
-#ifndef PARSE_CMD_LINE_H
-#define PARSE_CMD_LINE_H
+#ifndef UTIL_PARSE_CMD_LINE_H
+#define UTIL_PARSE_CMD_LINE_H
+
+namespace util {
 
 /**
  * Encases several run-time options for running tests.
@@ -39,5 +41,7 @@ struct CmdLineOpts {
  *   -t <num> : specify time to run in seconds (default 5)
  */
 int parseCmdLineOpts(int, char **, CmdLineOpts &);
+
+}  // namespace util
 
 #endif

@@ -1,17 +1,22 @@
-#include <cstdio>
+#include <vector>
+#include <string>
 #include <cstdlib>
-#include "queue.h"
+#include <cstdio>
 
-#include "parse-cmd-line.h"
+#include "queue.h"
 #include "test/timed-throughput.h"
+#include "util/parse-cmd-line.h"
 
 // For small tests
-extern template class ms::two_lock<int>;
-extern template class test::timed_throughput<ms::two_lock<int>, int>;
+extern template class ms::lock_free<int>;
+extern template class test::timed_throughput<ms::lock_free<int>, int>;
 
 // For large tests
-extern template class ms::two_lock<std::vector<std::string>>;
-extern template class test::timed_throughput<ms::two_lock<std::vector<std::string>>, std::vector<std::string>>;
+extern template class ms::lock_free<std::vector<std::string>>;
+extern template class test::timed_throughput<ms::lock_free<std::vector<std::string>>, std::vector<std::string>>;
+
+using util::CmdLineOpts;
+using util::parseCmdLineOpts;
 
 int main(int argc, char **argv) {
   using namespace std;
@@ -25,8 +30,8 @@ int main(int argc, char **argv) {
 
   pair<Time,int> throughput;
   if (opts.use_large_test) {
-    ms::two_lock<vector<string>> Q;
-    test::timed_throughput<ms::two_lock<vector<string>>, vector<string>> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+    ms::lock_free<vector<string> > Q;
+    test::timed_throughput<ms::lock_free<vector<string>>, vector<string>> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
 
     // Generate the "large" items. large vector of strings should do it.
     vector<string> product;
@@ -35,8 +40,8 @@ int main(int argc, char **argv) {
 
     throughput = test.run(product);
   } else {
-    ms::two_lock<int> Q;
-    test::timed_throughput<ms::two_lock<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
+    ms::lock_free<int> Q;
+    test::timed_throughput<ms::lock_free<int>, int> test(Q, opts.num_producers, opts.num_consumers, opts.time_to_run);
     throughput = test.run(0);
   }
 

@@ -3,7 +3,8 @@
 
 #include <cstdio>
 #include <cstddef> // used to define NULL
-#include "util.h"
+
+#include "util/atomic.h"
 
 namespace ms {
 

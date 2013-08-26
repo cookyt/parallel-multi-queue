@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+
 #include "test/timed-throughput.h"
 #include "queue/ms/lock-free.h"
 

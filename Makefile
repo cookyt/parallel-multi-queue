@@ -18,85 +18,116 @@ CXXFLAGS = -std=c++0x -g -Wall -pthread -DDEBUG=$(DEBUG)
 LIBBOOST = -lboost_thread -lboost_system
 LIB = $(LIBBOOST) -lrt
 
+.PHONY: all
 all: $(BIN)
 
+# Binaries
 bin/multi-test: \
-		src/test/mq-counted.cc \
+		src/mq-counted.cc \
 		obj/mq-counted.o \
+		obj/parse-cmd-line.o \
 		obj/test-mq-counted.o \
-		obj/util.o \
-		obj/parse-cmd-line.o
+		obj/time.o \
+		obj/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
 bin/bit-network-test: \
-		src/test/mq-bit-network.cc \
-		obj/test-ms-two-lock.o \
+		src/mq-bit-network.cc \
 		obj/ms-two-lock.o \
-		obj/util.o \
-		obj/parse-cmd-line.o
+		obj/parse-cmd-line.o \
+		obj/test-ms-two-lock.o \
+		obj/time.o \
+		obj/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
 bin/locking-test: \
-		src/test/ms-two-lock.cc \
-		obj/test-ms-two-lock.o \
+		src/ms-two-lock.cc \
 		obj/ms-two-lock.o \
-		obj/util.o \
-		obj/parse-cmd-line.o
+		obj/parse-cmd-line.o \
+		obj/test-ms-two-lock.o \
+		obj/time.o \
+		obj/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
 bin/lock-free-test: \
-		src/test/ms-lock-free.cc \
-		obj/test-ms-lock-free.o \
+		src/ms-lock-free.cc \
 		obj/ms-lock-free.o \
-		obj/util.o \
-		obj/parse-cmd-line.o
+		obj/parse-cmd-line.o \
+		obj/test-ms-lock-free.o \
+		obj/time.o \
+		obj/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
+# Libraries
 obj/parse-cmd-line.o: \
-		src/parse-cmd-line.cc \
-		src/parse-cmd-line.h
+		src/util/parse-cmd-line.cc \
+		src/util/parse-cmd-line.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 obj/util.o: \
-		src/util.cc \
-		src/util.h
+		src/util/util.cc \
+		src/util/util.h
+	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
+
+obj/time.o: \
+		src/util/time.cc \
+		src/util/time.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 obj/ms-two-lock.o: \
 		src/templ/ms/two-lock.cc \
-		src/queue/ms/two-lock.h
+		src/queue/ms/two-lock.h \
+		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 obj/ms-lock-free.o: \
 		src/templ/ms/lock-free.cc \
-		src/queue/ms/lock-free.h
+		src/queue/ms/lock-free.h \
+		src/util/atomic.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 obj/mq-counted.o: \
 		src/templ/mq/counted.cc \
-		src/queue/mq/counted.h
+		src/queue/mq/counted.h \
+		src/util/atomic.h \
+		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 obj/test-ms-two-lock.o: \
 		src/templ/test/ms-two-lock.cc \
-		src/test/timed-throughput.h
+		src/test/timed-throughput.h \
+		src/queue/ms/two-lock.h \
+		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 obj/test-ms-lock-free.o: \
 		src/templ/test/ms-lock-free.cc \
-		src/test/timed-throughput.h
+		src/test/timed-throughput.h \
+		src/queue/ms/lock-free.h \
+		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 obj/test-mq-counted.o: \
 		src/templ/test/mq-counted.cc \
-		src/test/timed-throughput.h
+		src/test/timed-throughput.h \
+		src/queue/mq/counted.h \
+		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
+.PHONY: clean-obj
 clean-obj:
 	-$(RM) $(OBJ)
-clean-tags:
-	-$(RM) */tags */types*.taghl
+
+.PHONY: clean-bin
 clean-bin:
 	-$(RM) $(BIN)
+
+.PHONY: clean-tags
+clean-tags:
+	-$(RM) */tags */types*.taghl
+
+.PHONY: clean-all
 clean-all: clean-obj clean-tags clean-bin
+
+.PHONY: clean
 clean: clean-obj clean-bin

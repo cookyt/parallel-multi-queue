@@ -3,7 +3,8 @@
 
 #include <cstddef> // used to define NULL
 #include <boost/thread/mutex.hpp>
-#include "util.h"
+
+#include "util/util.h"
 
 namespace ms {
 

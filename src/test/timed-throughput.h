@@ -4,7 +4,9 @@
 #include <utility>
 #include <unistd.h>
 #include <boost/thread.hpp>
-#include "util.h"
+
+#include "util/atomic.h"
+#include "util/time.h"
 
 namespace test {
 
