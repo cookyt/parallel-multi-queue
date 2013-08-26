@@ -1,12 +1,13 @@
 DEBUG=0
-OBJ = build/util/util.o \
-      build/util/parse-cmd-line.o \
-      build/templ/mq/counted.o \
+OBJ = build/templ/mq/counted.o \
       build/templ/ms/lock-free.o \
       build/templ/ms/two-lock.o \
       build/templ/test/mq-counted.o \
       build/templ/test/ms-lock-free.o \
-      build/templ/test/ms-two-lock.o
+      build/templ/test/ms-two-lock.o \
+      build/util/parse-cmd-line.o \
+      build/util/time.o \
+      build/util/util.o
 
 BIN = build/mq-counted-test \
       build/ms-two-lock-test \
