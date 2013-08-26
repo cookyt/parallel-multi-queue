@@ -9,13 +9,10 @@ between threads is lessened.
 Directory Layout
 ----------------
 + bin/
-  Compiled executable binaries
+  Compiled code (linkable objects and executable binaries)
 
 + doc/
   Documentation used to research topic
-
-+ obj/
-  Linkable object files
 
 + paper/
   Latex source for papers
