@@ -8,9 +8,9 @@ OBJ = obj/util.o \
       obj/test-ms-lock-free.o \
       obj/test-ms-two-lock.o
 
-BIN = bin/locking-test \
-      bin/multi-test \
-      bin/lock-free-test
+BIN = bin/mq-counted-test \
+      bin/ms-two-lock-test \
+      bin/ms-lock-free-test
 
 INC = -Isrc/
 CXXFLAGS = -std=c++0x -g -Wall -pthread -DDEBUG=$(DEBUG)
@@ -22,8 +22,8 @@ LIB = $(LIBBOOST) -lrt
 all: $(BIN)
 
 # Binaries
-bin/multi-test: \
-		src/mq-counted.cc \
+bin/mq-counted-test: \
+		src/mq-counted-test.cc \
 		obj/mq-counted.o \
 		obj/parse-cmd-line.o \
 		obj/test-mq-counted.o \
@@ -31,6 +31,7 @@ bin/multi-test: \
 		obj/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
+# TODO(cookyt): implement
 bin/bit-network-test: \
 		src/mq-bit-network.cc \
 		obj/ms-two-lock.o \
@@ -40,8 +41,8 @@ bin/bit-network-test: \
 		obj/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
-bin/locking-test: \
-		src/ms-two-lock.cc \
+bin/ms-two-lock-test: \
+		src/ms-two-lock-test.cc \
 		obj/ms-two-lock.o \
 		obj/parse-cmd-line.o \
 		obj/test-ms-two-lock.o \
@@ -49,8 +50,8 @@ bin/locking-test: \
 		obj/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
-bin/lock-free-test: \
-		src/ms-lock-free.cc \
+bin/ms-lock-free-test: \
+		src/ms-lock-free-test.cc \
 		obj/ms-lock-free.o \
 		obj/parse-cmd-line.o \
 		obj/test-ms-lock-free.o \
