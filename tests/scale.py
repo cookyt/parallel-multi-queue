@@ -118,9 +118,9 @@ if __name__ == "__main__":
         return scale_min0(val)
 
     def getTitle(s):
-        if s.find("locking") != -1:
+        if s.find("lock") != -1:
             return "Two-Lock Queue Throughput (items/sec)"
-        elif s.find("multi") != -1:
+        elif s.find("mq-") != -1:
             return "MultiQueue Throughput (items/sec)"
         else:
             return s
