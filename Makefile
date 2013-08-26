@@ -1,16 +1,19 @@
 DEBUG=0
-OBJ = obj/util.o \
-      obj/parse-cmd-line.o \
-      obj/mq-counted.o \
-      obj/ms-lock-free.o \
-      obj/ms-two-lock.o \
-      obj/test-mq-counted.o \
-      obj/test-ms-lock-free.o \
-      obj/test-ms-two-lock.o
+OBJ = build/util/util.o \
+      build/util/parse-cmd-line.o \
+      build/templ/mq/counted.o \
+      build/templ/ms/lock-free.o \
+      build/templ/ms/two-lock.o \
+      build/templ/test/mq-counted.o \
+      build/templ/test/ms-lock-free.o \
+      build/templ/test/ms-two-lock.o
 
-BIN = bin/mq-counted-test \
-      bin/ms-two-lock-test \
-      bin/ms-lock-free-test
+BIN = build/mq-counted-test \
+      build/ms-two-lock-test \
+      build/ms-lock-free-test
+
+# sort removes duplicates for a cleaner-looking mkdir command
+EXPECTED_DIRS = $(sort $(dir $(OBJ)))
 
 INC = -Isrc/
 CXXFLAGS = -std=c++0x -g -Wall -pthread -DDEBUG=$(DEBUG)
@@ -19,96 +22,100 @@ LIBBOOST = -lboost_thread -lboost_system
 LIB = $(LIBBOOST) -lrt
 
 .PHONY: all
-all: $(BIN)
+all: dirs $(BIN)
+
+.PHONY: dirs
+dirs: $(EXPECTED_DIRS)
+	mkdir -p $(EXPECTED_DIRS)
 
 # Binaries
-bin/mq-counted-test: \
+build/mq-counted-test: \
 		src/mq-counted-test.cc \
-		obj/mq-counted.o \
-		obj/parse-cmd-line.o \
-		obj/test-mq-counted.o \
-		obj/time.o \
-		obj/util.o
+		build/templ/mq/counted.o \
+		build/templ/test/mq-counted.o \
+		build/util/parse-cmd-line.o \
+		build/util/time.o \
+		build/util/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
 # TODO(cookyt): implement
-bin/bit-network-test: \
+build/bit-network-test: \
 		src/mq-bit-network.cc \
-		obj/ms-two-lock.o \
-		obj/parse-cmd-line.o \
-		obj/test-ms-two-lock.o \
-		obj/time.o \
-		obj/util.o
+		build/templ/ms/two-lock.o \
+		build/templ/test/ms-two-lock.o \
+		build/util/parse-cmd-line.o \
+		build/util/time.o \
+		build/util/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
-bin/ms-two-lock-test: \
+build/ms-two-lock-test: \
 		src/ms-two-lock-test.cc \
-		obj/ms-two-lock.o \
-		obj/parse-cmd-line.o \
-		obj/test-ms-two-lock.o \
-		obj/time.o \
-		obj/util.o
+		build/templ/ms/two-lock.o \
+		build/templ/test/ms-two-lock.o \
+		build/util/parse-cmd-line.o \
+		build/util/time.o \
+		build/util/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
-bin/ms-lock-free-test: \
+build/ms-lock-free-test: \
 		src/ms-lock-free-test.cc \
-		obj/ms-lock-free.o \
-		obj/parse-cmd-line.o \
-		obj/test-ms-lock-free.o \
-		obj/time.o \
-		obj/util.o
+		build/templ/ms/lock-free.o \
+		build/templ/test/ms-lock-free.o \
+		build/util/parse-cmd-line.o \
+		build/util/time.o \
+		build/util/util.o
 	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
 
 # Libraries
-obj/parse-cmd-line.o: \
+build/util/parse-cmd-line.o: \
 		src/util/parse-cmd-line.cc \
 		src/util/parse-cmd-line.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-obj/util.o: \
+build/util/util.o: \
 		src/util/util.cc \
 		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-obj/time.o: \
+build/util/time.o: \
 		src/util/time.cc \
 		src/util/time.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-obj/ms-two-lock.o: \
+build/templ/ms/two-lock.o: \
 		src/templ/ms/two-lock.cc \
 		src/queue/ms/two-lock.h \
 		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-obj/ms-lock-free.o: \
+build/templ/ms/lock-free.o: \
 		src/templ/ms/lock-free.cc \
 		src/queue/ms/lock-free.h \
 		src/util/atomic.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-obj/mq-counted.o: \
+build/templ/mq/counted.o: \
 		src/templ/mq/counted.cc \
 		src/queue/mq/counted.h \
 		src/util/atomic.h \
 		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-obj/test-ms-two-lock.o: \
+build/templ/test/ms-two-lock.o: \
 		src/templ/test/ms-two-lock.cc \
 		src/test/timed-throughput.h \
 		src/queue/ms/two-lock.h \
 		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-obj/test-ms-lock-free.o: \
+build/templ/test/ms-lock-free.o: \
 		src/templ/test/ms-lock-free.cc \
 		src/test/timed-throughput.h \
 		src/queue/ms/lock-free.h \
 		src/util/util.h
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
-obj/test-mq-counted.o: \
+build/templ/test/mq-counted.o: \
 		src/templ/test/mq-counted.cc \
 		src/test/timed-throughput.h \
 		src/queue/mq/counted.h \
