@@ -1,0 +1,6 @@
+# LaTeX output files
+*.aux
+*.bbl
+*.blg
+*.log
+*.pdf
