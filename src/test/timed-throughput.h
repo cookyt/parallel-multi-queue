@@ -125,7 +125,8 @@ class timed_throughput {
    * time.
    * @param item Each producer will get a copy of this item to "produce" in the
    *   queue
-   * @return a pair of 
+   * @return a pair of which corresponds to the time it took to run the test and
+   *   the number of items through the queue.
    */
   std::pair<util::time::Time, int> run(const T &item) {
     // the +1 allows a call to bar.wait() in this thread to start all
