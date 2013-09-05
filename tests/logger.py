@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import os
 import sys
 import subprocess as sp
@@ -81,24 +81,40 @@ class Logger:
         log.write("# CPU: %s\n"%self.get_cpu_name())
         return log
 
+    # runs a trial for the gven number of producers and consumers. Due to
+    # unknown reasons, tests tend to randomly return very low, obviously wrong
+    # values. This method retries if the parsed value is <1
+    def _run_trial(self, cnum, pnum):
+        print("trying: consumers={0}, producers={1}".format(cnum, pnum))
+        for trial in range(1, 5):
+          cmdpipe = os.popen("%s -c %d -p %d"%(self.exe_name, cnum, pnum))
+          time_str = cmdpipe.read()
+          try:
+              time = float(time_str)
+              if time > 1:
+                print(time)
+                self.data.append((cnum, pnum, time));
+                return
+              else:
+                print("error with trial, trying again.")
+          except ValueError:
+              sys.stderr.write("Error with trial:\n"
+                               "\tconsumers=%d\n"
+                               "\tproducers=%d\n"
+                               "\toutput is %s\n"%(cnum, pnum, time_str))
+              # Don't retry because getting to this point implies a deeper
+              # problem with the structure of the output.
+              return
+        print("Timed out with trials with consumers={0}, "
+              "producers={1}".format(cnum, pnum))
+
     def run(self):
         """Tests the executable for each configuration of consumers and
         producers, and logs the result to the log file."""
 
         for cnum in range(1, self.consumers+1):
             for pnum in range(1, self.producers+1):
-                print "trying: consumers=%d, producers=%d"%(cnum, pnum),
-                cmdpipe = os.popen("%s -c %d -p %d"%(self.exe_name, cnum, pnum))
-                time_str = cmdpipe.read()
-                try:
-                    time = float(time_str)
-                    print time
-                    self.data.append((cnum, pnum, time));
-                except ValueError:
-                    sys.stderr.write("Error with trial:\n"
-                                     "\tconsumers=%d\n"
-                                     "\tproducers=%d\n"
-                                     "\toutput is %s\n"%(cnum, pnum, time_str))
+                self._run_trial(cnum, pnum)
 
         for item in self.data:
             self.log.write("%d\t%d\t%f\n"%item)
