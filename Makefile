@@ -20,7 +20,7 @@ INC = -Isrc/
 CXXFLAGS = -std=c++0x -g -Wall -pthread -DDEBUG=$(DEBUG)
 
 LIBBOOST = -lboost_thread -lboost_system
-LIB = $(LIBBOOST) -lrt
+LIB = -L/usr/local/lib $(LIBBOOST) -lrt
 
 .PHONY: all
 all: $(EXPECTED_DIRS) $(BIN)
