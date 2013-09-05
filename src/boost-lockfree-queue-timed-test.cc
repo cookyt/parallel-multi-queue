@@ -18,17 +18,7 @@ using util::CmdLineOpts;
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-class null_queue {
- public:
-  bool push(const int &val) {
-    return false;
-  }
-  bool pop(int &ret) {
-    return false;
-  }
-};
-
-typedef timed_throughput_fixture<null_queue, int,
+typedef timed_throughput_fixture<queue<int>, int,
                                  queue<int>, int> Fixture;
 
 int main(int argc, char **argv) {
@@ -45,7 +35,7 @@ int main(int argc, char **argv) {
   boost::lockfree::queue<int> small_queue(max_num_threads);
   int small_item = 0;
 
-  Fixture fixture(nullptr, nullptr, &small_queue, &small_item);
+  Fixture fixture(&small_queue, &small_item, &small_queue, &small_item);
   if (fixture.run(argc, argv))
     return 0;
   else
