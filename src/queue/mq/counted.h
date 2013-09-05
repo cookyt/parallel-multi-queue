@@ -10,7 +10,7 @@
 
 namespace mq {
 
-/** 
+/**
  * Experimental MultiQueue. It uses the a two-lock queue developed by
  * Micheal and Scott internally. Currently, operations create a full copy
  * of the item via the copy constructor and pass around pointers to the
@@ -33,7 +33,7 @@ class counted {
   std::vector<PaddedQueue *> queues;
 
  public:
-  counted(int num_queues_) : 
+  counted(int num_queues_) :
       enqueue_cur(0), dequeue_cur(0) {
     num_queues = util::nextPow2(num_queues_);
     mask = num_queues-1;
