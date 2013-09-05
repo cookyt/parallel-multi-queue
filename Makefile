@@ -11,7 +11,8 @@ OBJ = build/templ/mq/counted.o \
 
 BIN = build/mq-counted-test \
       build/ms-two-lock-test \
-      build/ms-lock-free-test
+      build/ms-lock-free-test \
+      build/boost-lockfree-queue-timed-test
 
 # sort removes duplicates for a cleaner-looking mkdir command
 EXPECTED_DIRS = $(sort $(dir $(OBJ)))
@@ -29,6 +30,13 @@ $(EXPECTED_DIRS): %:
 	mkdir -p $@
 
 # Binaries
+build/boost-lockfree-queue-timed-test: \
+		src/boost-lockfree-queue-timed-test.cc \
+		build/util/parse-cmd-line.o \
+		build/util/time.o \
+		build/util/util.o
+	$(CXX) $(CXXFLAGS) $(INC) $^ -o $@ $(LIB)
+
 build/mq-counted-test: \
 		src/mq-counted-test.cc \
 		build/templ/mq/counted.o \
