@@ -23,11 +23,10 @@ LIBBOOST = -lboost_thread -lboost_system
 LIB = $(LIBBOOST) -lrt
 
 .PHONY: all
-all: dirs $(BIN)
+all: $(EXPECTED_DIRS) $(BIN)
 
-.PHONY: dirs
-dirs: $(EXPECTED_DIRS)
-	mkdir -p $(EXPECTED_DIRS)
+$(EXPECTED_DIRS): %:
+	mkdir -p $@
 
 # Binaries
 build/mq-counted-test: \
