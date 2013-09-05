@@ -1,12 +1,11 @@
 #ifndef QUEUE_MS_LOCK_FREE_H
 #define QUEUE_MS_LOCK_FREE_H
 
-#include <cstdio>
-#include <cstddef> // used to define NULL
-
 #include "util/atomic.h"
 
 namespace ms {
+
+using util::atomic::cas;
 
 template<typename T>
 class lock_free {
@@ -27,14 +26,14 @@ class lock_free {
 
  public:
   lock_free() {
-    head = new Node(NULL, NULL);
+    head = new Node(nullptr, nullptr);
     tail = head;
   }
 
   ~lock_free() {
     Node *del = head;
     Node *cur = del->next;
-    while (cur != NULL) {
+    while (cur != nullptr) {
       delete del;
       del = cur;
       cur = cur->next;
@@ -44,20 +43,20 @@ class lock_free {
 
   bool push(const T &item) {
     Node *mytail, *mynext;
-    Node *node = new Node(new T(item), NULL);
+    Node *node = new Node(new T(item), nullptr);
     for (;;) {
       mytail = tail;
       mynext = mytail->next;
       if (mytail == tail) {
-        if (mynext == NULL) {
-          if (util::atomic::cas(&(mytail->next), mynext, node))
+        if (mynext == nullptr) {
+          if (cas(&(mytail->next), mynext, node))
             break;
         } else {
-          util::atomic::cas(&tail, mytail, mynext);
+          cas(&tail, mytail, mynext);
         }
       }
     }
-    util::atomic::cas(&tail, mytail, node);
+    cas(&tail, mytail, node);
     return true;
   }
 
@@ -69,12 +68,13 @@ class lock_free {
       mynext = myhead->next;
       if (myhead == head) {
         if (myhead == mytail) {
-          if (mynext == NULL)
+          if (mynext == nullptr) {
             return false;
-          util::atomic::cas(&tail, mytail, mynext);
+          }
+          cas(&tail, mytail, mynext);
         } else {
           result = *(mynext->data);
-          if (util::atomic::cas(&head, myhead, mynext))
+          if (cas(&head, myhead, mynext))
             break;
         }
       }

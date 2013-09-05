@@ -1,7 +1,6 @@
 #ifndef MS_TWO_LOCK_H
 #define MS_TWO_LOCK_H
 
-#include <cstddef> // used to define NULL
 #include <boost/thread/mutex.hpp>
 
 #include "util/util.h"
@@ -36,14 +35,14 @@ class two_lock {
 
  public:
   two_lock() {
-    head = new Node(NULL, NULL);
+    head = new Node(nullptr, nullptr);
     tail = head;
   }
 
   ~two_lock() {
     Node *del = head;
     Node *cur = del->next;
-    while (cur != NULL) {
+    while (cur != nullptr) {
       delete del;
       del = cur;
       cur = cur->next;
@@ -60,7 +59,7 @@ class two_lock {
   bool push(const T &item) {
     // Constructing the node outside the critical section allows
     // for some concurrency between producers.
-    Node *node = new Node(new T(item), NULL);
+    Node *node = new Node(new T(item), nullptr);
 
     tail_lock.lock();
     tail->next = node;
@@ -81,7 +80,7 @@ class two_lock {
     head_lock.lock();
     Node *node = head;
     Node *new_head = head->next;
-    if (new_head == NULL) {
+    if (new_head == nullptr) {
       head_lock.unlock();
       return false;
     }
