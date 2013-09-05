@@ -47,12 +47,12 @@ class counted {
       delete queues[i];
   }
 
-  void push(const T &item) {
+  bool push(const T &item) {
     unsigned int mycur = util::atomic::fetchAndAdd(&enqueue_cur, 1);
-    queues[mycur&mask]->queue.push(item);
+    return queues[mycur&mask]->queue.push(item);
   }
 
-  bool try_pop(T &result) {
+  bool pop(T &result) {
     unsigned int mycur;
     for (;;) {
       mycur = dequeue_cur;
@@ -69,7 +69,7 @@ class counted {
     // see an empty queue when in reality, the producer hasn't finished
     // yet. This might allow the cur item pointer to skip over an item
     // in the queue, making the non-linearizable
-    while (!queues[mycur&mask]->queue.try_pop(result)) {
+    while (!queues[mycur&mask]->queue.pop(result)) {
       // If there are producers, a consumer might get stuck here
       // forever. I need a way out.
       boost::this_thread::interruption_point();

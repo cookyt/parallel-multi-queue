@@ -42,7 +42,7 @@ class lock_free {
     delete del;
   }
 
-  void push(const T &item) {
+  bool push(const T &item) {
     Node *mytail, *mynext;
     Node *node = new Node(new T(item), NULL);
     for (;;) {
@@ -58,9 +58,10 @@ class lock_free {
       }
     }
     util::atomic::cas(&tail, mytail, node);
+    return true;
   }
 
-  bool try_pop(T &result) {
+  bool pop(T &result) {
     Node *myhead, *mytail, *mynext;
     for (;;) {
       myhead = head;

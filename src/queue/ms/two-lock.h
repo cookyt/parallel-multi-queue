@@ -55,8 +55,9 @@ class two_lock {
    * Enqueues an item into the queue.
    * @param item The item to push. This item is copied into the
    *   queue, so the copy constructor must be defined on T.
+   * @return This does not fail, so it always returns true.
    */
-  void push(const T &item) {
+  bool push(const T &item) {
     // Constructing the node outside the critical section allows
     // for some concurrency between producers.
     Node *node = new Node(new T(item), NULL);
@@ -65,6 +66,8 @@ class two_lock {
     tail->next = node;
     tail = node;
     tail_lock.unlock();
+
+    return true;
   }
 
   /**
@@ -74,7 +77,7 @@ class two_lock {
    * @return true if an item was dequeued, false if the queue was
    *   empty.
    */
-  bool try_pop(T &result) {
+  bool pop(T &result) {
     head_lock.lock();
     Node *node = head;
     Node *new_head = head->next;

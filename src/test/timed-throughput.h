@@ -54,7 +54,7 @@ class Consumer {
     try {
       for (;;) {
         boost::this_thread::interruption_point();
-        if (Q.try_pop(val)) {
+        if (Q.pop(val)) {
           // Incrementing throughput locally before adding it up
           // prevents the shared-counter contention problem but I
           // have to accept a certain degree of inaccuracy with
@@ -110,8 +110,8 @@ class Producer {
 // consumers are spawned and let loose to enqueue/dequeue one item each. The
 // parameter is the type of queue you want to test. It must provide the
 // following methods:
-//   void push(const T &)
-//   bool try_pop(T &)
+//   bool push(const T &)
+//   bool pop(T &)
 template <typename Queue, typename T>
 class timed_throughput {
  private:

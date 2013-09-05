@@ -48,13 +48,13 @@ class bit_network {
     buckets_[idx].push(x);
   }
 
-  inline bool try_pop(T& x) {
+  inline bool pop(T& x) {
     unsigned idx = select_queue_index(deq_network_);
     unsigned const n = buckets_.size();
     for (unsigned i = 0; i < n; ++i) {
       // try all to dequeue from all n queues until giving up.
       // start trying from the selected index.
-      if (buckets_[(idx+i)&(n-1)].try_pop(x)) {
+      if (buckets_[(idx+i)&(n-1)].pop(x)) {
         return (true);
       }
     }
