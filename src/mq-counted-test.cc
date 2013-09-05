@@ -22,8 +22,8 @@ using util::makeLargeItem;
 using util::parseCmdLineOpts;
 using util::time::Time;
 
-extern template class counted<vector<string>>;
-extern template class counted<int>;
+extern template class mq::counted<vector<string>>;
+extern template class mq::counted<int>;
 
 typedef timed_throughput_fixture<counted<vector<string>>, vector<string>,
                                  counted<int>, int> Fixture;

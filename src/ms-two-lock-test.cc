@@ -17,8 +17,8 @@ using test::timed_throughput_fixture;
 using util::makeLargeItem;
 using util::time::Time;
 
-extern template class two_lock<int>;
-extern template class two_lock<vector<string>>;
+extern template class ms::two_lock<int>;
+extern template class ms::two_lock<vector<string>>;
 
 typedef timed_throughput_fixture<two_lock<vector<string>>, vector<string>,
                                  two_lock<int>, int> Fixture;
