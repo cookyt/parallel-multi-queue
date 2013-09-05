@@ -37,7 +37,7 @@ int parseCmdLineOpts(int argc, char **argv, CmdLineOpts &opts) {
     if (argv[i][0] != '-') {
       fprintf(stderr, "Invalid argument '%s'\n", argv[i]);
       return 1;
-    }   
+    }
     char c = argv[i][1];
 
     if (c == 'l') {

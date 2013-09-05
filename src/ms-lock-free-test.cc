@@ -17,8 +17,8 @@ using test::timed_throughput_fixture;
 using util::makeLargeItem;
 using util::time::Time;
 
-extern template class lock_free<int>;
-extern template class lock_free<vector<string>>;
+extern template class ms::lock_free<int>;
+extern template class ms::lock_free<vector<string>>;
 
 typedef timed_throughput_fixture<lock_free<vector<string>>, vector<string>,
                                  lock_free<int>, int> Fixture;
