@@ -10,6 +10,8 @@
 
 namespace mq {
 
+using util::atomic::cas;
+
 /**
  * Experimental MultiQueue. It uses the a two-lock queue developed by
  * Micheal and Scott internally. Currently, operations create a full copy
@@ -30,6 +32,7 @@ class counted {
     char padding[util::kCacheLineSize];
   };
 
+  // Outside of constructor, only lookup operations are called.
   std::vector<PaddedQueue *> queues;
 
  public:
@@ -61,7 +64,7 @@ class counted {
 
       // TODO(cookyt): this shouldn't be using the GCC-specific implementation
       // of CAS. Replace it with C++11 atomics
-      if (__sync_bool_compare_and_swap(&dequeue_cur, mycur, mycur+1))
+      if (cas(&dequeue_cur, mycur, mycur+1))
         break;
     }
 

@@ -30,8 +30,12 @@ inline uint32_t fetchAndAdd(uint32_t volatile *addr, uint32_t val) {
  * Uses a GCC-specific bultin. Should be implemented in a more portable
  * fashion.
  */
-template<typename T>
-bool cas(T *addr, T oldval, T newval) {
+template<typename T, typename R>
+bool cas(R *addr, T oldval, T newval) {
+  static_assert(sizeof(T) <= sizeof(void*),
+      "Trying to use CAS on more than one word");
+  static_assert(sizeof(T) == sizeof(R),
+      "Size of new value should be equal to the size of the pointed value.");
   return __sync_bool_compare_and_swap(addr, oldval, newval);
 }
 
