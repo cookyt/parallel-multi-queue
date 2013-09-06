@@ -1,1 +1,4 @@
 .ycm_extra_conf.pyc
+
+# vim swp files
+*/.*.sw*
