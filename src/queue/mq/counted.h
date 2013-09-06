@@ -11,6 +11,7 @@
 namespace mq {
 
 using util::atomic::cas;
+using util::atomic::fetchAndAdd;
 
 /**
  * Experimental MultiQueue. It uses the a two-lock queue developed by
@@ -51,7 +52,7 @@ class counted {
   }
 
   bool push(const T &item) {
-    unsigned int mycur = util::atomic::fetchAndAdd(&enqueue_cur, 1);
+    unsigned int mycur = fetchAndAdd(&enqueue_cur, 1);
     return queues[mycur&mask]->queue.push(item);
   }
 
