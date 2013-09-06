@@ -3,10 +3,10 @@
 import sys
 import hashlib
 
-"""This script takes the output produced by logger.py, and scales the results
-so that they can be passed into a grapher. It takes several files on the
-cmdline, and produces an equal number of files, scaled to the global minimum
-and maximum.
+"""This script takes the output produced by logger.py, and scales the results so
+that they can be passed into a grapher. It takes several files on the cmdline,
+and produces an equal number of gnuplot scripts which graph the data, scaled to
+the global minimum and maximum.
 
 The scaling is between 0.01 and 0.5, and it is distributed so that the area of
 a circle with the scaled value as a radius is proportional to the size of the
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     min_val = float("inf")
     d_val = 0.0
 
-    """Dictionary of file names to a list of 4 items:
+    """Dictionary of file names to a list of 8 items:
         1. An open file pointer to the new scaled data file
         2. A list of 3-tuples with the old data: (consumer, producer, throughput)
         3. The min throughput for the above data
@@ -91,7 +91,6 @@ if __name__ == "__main__":
         all_data[fname].append(max_producers+1)
         all_data[fname].append(lines[0].replace("#", "").strip()) # title
         all_data[fname].append(newname)
-        str.replace
 
         f.close()
 
@@ -118,7 +117,7 @@ if __name__ == "__main__":
         return scale_min0(val)
 
     def getTitle(s):
-        if s.find("lock") != -1:
+        if s.find("two-lock") != -1:
             return "Two-Lock Queue Throughput (items/sec)"
         elif s.find("mq-") != -1:
             return "MultiQueue Throughput (items/sec)"
